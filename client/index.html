@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <title>Task</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+            }
+            body{
+                display: flex;
+                flex-direction: column;
+                margin: 2rem auto;
+                justify-content: center;
+                width: 680px;
+            }
+            header{
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+            }
+
+            main{
+                border: 2px solid black;
+                border-radius: 10px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                padding: 2rem;
+                gap: 2rem;
+            }
+            
+            ul {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            li {
+                display: flex;
+                flex-direction: row;
+                gap: 1rem;
+                list-style: none;
+            }
+            
+            button {
+                justify-content: end;
+                align-items: flex-end;
+            }
+
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>Tasks</h1>
+        </header>
+        <main>
+            <form id="input-bar" action="http://localhost:5000/todos" method="POST">    
+                <label for="task"></label>
+                <input id="task" name="description" type="text" placeholder="Enter task">
+                <button type="submit">Add task</button>
+            </form>
+            <ul id="pending-tasks"><h2>Pending Tasks</h2></ul>
+            <ul id="completed-tasks"><h2>Completed Tasks</h2></ul>
+        </main>
+    </body>
+    <script>
+        const inputBar = document.getElementById("input-bar");
+        let pendingTasks = document.getElementById("pending-tasks");
+        let completedTasks = document.getElementById("completed-tasks");
+
+        /* ************************
+            Server-side Changes
+        ************************ */
+        async function serverGetTasks() {
+            try {
+                const response = await fetch('http://localhost:5000/todos', {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" }
+                });
+
+                const data = await response.json();
+                return data;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function serverCreateTask(taskDescription) {
+            try {
+                const response = await fetch("http://localhost:5000/todos", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({description: taskDescription, status: "Pending"})
+                });
+
+                const newTodo = await response.json();
+                return newTodo;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function serverUpdateTask(taskId, taskDescription, taskStatus) {
+            const response = await fetch(`http://localhost:5000/todos/${taskId}`, {
+                method: "PUT",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({description: taskDescription, status: taskStatus})
+            });
+        } 
+
+        async function serverDeleteTask(taskId) {
+            const response = await fetch(`http://localhost:5000/todos/${taskId}`, {
+                method: "DELETE"
+            });
+        }
+
+        /* ************************
+            Client-side Changes
+        ************************ */
+        function createTask(task) {
+            const todo = document.createElement("li");
+            todo.id = task.todo_id;
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            if (task.status === "Completed") checkbox.checked = true;
+            todo.appendChild(checkbox);
+
+            const taskDescription = document.createElement("input");
+            taskDescription.value = task.description;
+            taskDescription.type = "text";
+            todo.appendChild(taskDescription);
+            
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.classList = "delete-btn";
+            deleteButton.textContent = "Delete";
+            todo.appendChild(deleteButton);
+            
+            if (!checkbox.checked) {
+                pendingTasks.appendChild(todo);
+            } else {
+                completedTasks.appendChild(todo);
+            }
+        }
+
+        async function showTasks() {
+            const data = await serverGetTasks();
+            data.forEach(task => {
+                createTask(task);
+            });
+        }
+        showTasks();
+
+        async function addTask(e) {
+            e.preventDefault();
+            const description = inputBar.description.value;
+            const newTodo = await serverCreateTask(description);
+            createTask(newTodo.rows[0]);
+            inputBar.reset();
+        }
+
+        function editTask(e) {
+            if (e.key === "Enter") {
+                const li = e.target.closest("li");
+                const taskId = li.id;
+                const taskDescription = li.querySelector("input[type='text']").value;
+                const taskStatus = li.querySelector("input[type='checkbox']") ? "Completed" : "Pending";
+                serverUpdateTask(taskId, taskDescription, taskStatus);
+            }
+        }
+        
+        function removeTask(e) {
+            if (e.target && e.target.classList.contains("delete-btn")) {
+                const li = e.target.closest("li");
+                const taskId = li.id;
+                serverDeleteTask(taskId);
+                li.remove();
+            }
+        }
+
+        function markTask(e) {
+            if (e.target.type !== "checkbox") return;
+            
+            const checkbox = e.target;
+            const task = checkbox.closest("li");
+            const taskDescription = task.querySelector("input[type='text']").value;
+            if (checkbox.checked) {
+                completedTasks.appendChild(task);
+                serverUpdateTask(task.id, taskDescription, "Completed");
+            } else {
+                pendingTasks.appendChild(task);
+                serverUpdateTask(task.id, taskDescription, "Pending");
+            }
+            
+        }
+        
+        inputBar.addEventListener("submit", addTask);
+        pendingTasks.addEventListener("keydown", editTask);
+        pendingTasks.addEventListener("click", removeTask);
+        pendingTasks.addEventListener("change", markTask);
+        completedTasks.addEventListener("keydown", editTask);
+        completedTasks.addEventListener("click", removeTask);
+        completedTasks.addEventListener("change", markTask);
+    
+    </script>
+</html>
