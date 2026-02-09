@@ -1,5 +1,5 @@
 {
-  "name": "rest-api",
+  "name": "todo",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,16 +9,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Areco892/REST-API.git"
+    "url": "git+https://github.com/Areco892/Todo.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/Areco892/REST-API/issues"
+    "url": "https://github.com/Areco892/Todo/issues"
   },
-  "homepage": "https://github.com/Areco892/REST-API#readme",
+  "homepage": "https://github.com/Areco892/Todo#readme",
   "dependencies": {
     "bcrypt": "^6.0.0",
     "config": "^4.2.0",
