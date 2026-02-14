@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Timer App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        main{
+            display: flex;
+            flex-direction: column;
+            border: 2px solid black;
+            border-radius: 1rem;
+            padding: 2rem;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        #name{
+            width: 100%;
+        }
+        #timer{
+            width: 100%;
+            text-align: center;
+        }
+
+        input{
+            padding: 0.5rem;
+        }
+
+        button{
+            padding: 0.5rem;
+        }
+
+        #timer-display{
+            width: 100%;
+            text-align: center;
+            border: 2px solid black;
+            border-radius: 2rem;
+            padding: 1rem;
+            font-size: 1.5rem;
+        }
+
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Timer App</h1>
+    </header>
+    <main>
+        <input id="name" name="name" type="text" placeholder="Enter Timer Name" required>
+        <input id="timer" name="timer" type="text" maxlength="8" value="00:05:00" required readonly>
+
+        <div id="incrementals">
+            <button id="add-five" type="button">+00:05</button>
+            <button id="add-ten" type="button">+00:10</button>
+            <button id="add-thirty" type="button">+00:30</button>
+        </div>
+
+        <p id="timer-display">00:00:00</p>
+        
+        <div id="control-panel">
+            <button id="reset-btn" type="button" >Reset</button>
+            <button id="start-btn" type="button">Start</button>
+            <button id="stop-btn" type="button">Stop</button>
+            <button id="resume-btn" type="button">Resume</button>
+        </div>
+    </main>
+
+    <script>
+        const oneSecond = 1;
+        const oneMinute = 60 * oneSecond;
+        const oneHour = 60 * oneMinute;
+        const maxTime = 99 * oneHour;
+
+        const timerInput = document.getElementById("timer");
+        const timerDisplay = document.getElementById("timer-display");
+        const add5SecBtn = document.getElementById("add-five");
+        const add10SecBtn = document.getElementById("add-ten");
+        const add30SecBtn = document.getElementById("add-thirty");
+        const startBtn = document.getElementById("start-btn");
+        const stopBtn = document.getElementById("stop-btn");
+        const resumeBtn = document.getElementById("resume-btn");
+        const resetBtn = document.getElementById("reset-btn");
+
+        let timeInHrMinSec = "000000";
+        let timeInSec = 0;
+        let countdownInterval;
+
+        /***********************
+            HELPER FUNCTIONS
+        ***********************/
+        function formatTime(timeString) {
+            return (
+                timeString.substring(0,2) + ":" +
+                timeString.substring(2,4) + ":" +
+                timeString.substring(4,6)
+            );
+        } 
+
+        function convertSecToHrMinSec(time) {
+            let hours = "00", minutes = "00", seconds = "00";
+            hours += Math.floor(time / oneHour);
+            minutes += Math.floor((time % oneHour) / oneMinute);
+            seconds += time % oneMinute; 
+            return hours.slice(-2) + minutes.slice(-2) + seconds.slice(-2);
+        }
+
+        function convertHrMinSecToSec(timeHrMinSec) {
+            let hours = parseInt(timeHrMinSec.substring(0,2));
+            let minutes = parseInt(timeHrMinSec.substring(3,5));
+            let seconds = parseInt(timeHrMinSec.substring(6,8));
+            let timeSec = hours * oneHour + minutes * oneMinute + seconds
+            return timeSec;
+        }
+
+        function startTimer() {
+            if (countdownInterval) return;
+
+            timeInSec = convertHrMinSecToSec(timerInput.value);
+            let currentTime = convertSecToHrMinSec(timeInSec);
+
+            if (timeInSec > 0) {
+                countdownInterval = setInterval(() => {
+                    if (timeInSec < 0) {
+                        clearInterval(countdownInterval);
+                        return;
+                    }
+                    currentTime = convertSecToHrMinSec(timeInSec);
+                    timerDisplay.textContent = formatTime(currentTime);
+                    timeInSec--;
+                }, 1000);
+            }
+        }
+
+        function stopTimer() {
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+        }
+
+        function resumeTimer() {
+            countdownInterval = setInterval(() => {
+                if (timeInSec < 0) {
+                    clearInterval(countdownInterval);
+                    return;
+                }
+                currentTime = convertSecToHrMinSec(timeInSec);
+                timerDisplay.textContent = formatTime(currentTime);
+                timeInSec--;
+            }, 1000);
+        }
+
+        function resetTimer() {
+            stopTimer();
+            timerDisplay.textContent = "00:00:00";
+            timerInput.value = "00:00:00";
+            timeInSec = 0;
+        }
+
+        /***********************
+            EVENT LISTENERS
+        ***********************/
+        timerInput.addEventListener("keydown", (e) => {
+            if (/^\d$/.test(e.key)) {
+                timeInHrMinSec = timeInHrMinSec.slice(1) + e.key;
+            }
+
+            if (e.key === "Backspace") {
+                timeInHrMinSec = "0" + timeInHrMinSec.slice(0,5);
+            }
+            timerInput.value = formatTime(timeInHrMinSec);
+        });
+
+        add5SecBtn.addEventListener("click", () => {
+            if (countdownInterval) return;
+            let currentTime = convertHrMinSecToSec(timerInput.value);
+            let updatedTime = convertSecToHrMinSec(currentTime + 5);
+            timerInput.value = formatTime(updatedTime);
+
+            timeInSec = currentTime + 5;
+            timeInHrMinSec = updatedTime;
+        });
+        
+        add10SecBtn.addEventListener("click", () => {
+            if (countdownInterval) return;
+            let currentTime = convertHrMinSecToSec(timerInput.value);
+            let updatedTime = convertSecToHrMinSec(currentTime + 10);
+            timerInput.value = formatTime(updatedTime);
+
+            timeInSec = currentTime + 10;
+            timeInHrMinSec = updatedTime;
+        });
+
+        add30SecBtn.addEventListener("click", () => {
+            if (countdownInterval) return;
+            let currentTime = convertHrMinSecToSec(timerInput.value);
+            let updatedTime = convertSecToHrMinSec(currentTime + 30);
+            timerInput.value = formatTime(updatedTime);
+
+            timeInSec = currentTime + 30;
+            timeInHrMinSec = updatedTime;
+        });
+
+        startBtn.addEventListener("click", startTimer);
+
+        stopBtn.addEventListener("click", stopTimer);
+        
+        resumeBtn.addEventListener("click", resumeTimer);
+
+        resetBtn.addEventListener("click", resetTimer);
+
+    </script>
+</body>
+
+</html>
