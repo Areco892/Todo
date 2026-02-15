@@ -38,7 +38,7 @@ export async function updateTodo(req: Request, res: Response) {
         const id = req.params.id as string;
         const { description, status } = req.body;
         const updateTodo = await TodoService.updateTodoService(id, description, status);
-        res.json( {message: "Todo was updated!" });
+        res.json({message: "Todo was updated!" });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error" });

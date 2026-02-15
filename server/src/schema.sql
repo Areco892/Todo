@@ -1,4 +1,4 @@
-CREATE DATABASE perntodo;
+CREATE DATABASE gadget;
 
 CREATE TABLE todo(
     todo_id SERIAL PRIMARY KEY,
@@ -12,8 +12,9 @@ CREATE TABLE timer(
     time VARCHAR(8)
 );
 
-CREATE TABLE planner(
-    todo_id SERIAL PRIMARY KEY,
+CREATE TABLE workout(
+    workout_id SERIAL PRIMARY KEY,
     name VARCHAR(255),
-    time VARCHAR(8)
+    image VARCHAR(255),
+    description VARCHAR(255)
 );
