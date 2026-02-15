@@ -71,9 +71,9 @@
             let pendingTasks = document.getElementById("pending-tasks");
             let completedTasks = document.getElementById("completed-tasks");
 
-            /* ************************
+            /**************************
                 Server-side Changes
-            ************************ */
+            **************************/
             async function serverGetTasks() {
                 try {
                     const response = await fetch('http://localhost:5000/todos', {
@@ -104,22 +104,30 @@
             }
 
             async function serverUpdateTask(taskId, taskDescription, taskStatus) {
-                const response = await fetch(`http://localhost:5000/todos/${taskId}`, {
-                    method: "PUT",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({description: taskDescription, status: taskStatus})
-                });
-            } 
-
-            async function serverDeleteTask(taskId) {
-                const response = await fetch(`http://localhost:5000/todos/${taskId}`, {
-                    method: "DELETE"
-                });
+                try{
+                    const response = await fetch(`http://localhost:5000/todos/${taskId}`, {
+                        method: "PUT",
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({description: taskDescription, status: taskStatus})
+                    });
+                } catch (err) {
+                    console.error(err);
+                }
             }
 
-            /* ************************
+            async function serverDeleteTask(taskId) {
+                try {
+                    const response = await fetch(`http://localhost:5000/todos/${taskId}`, {
+                        method: "DELETE"
+                    });
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+
+            /**************************
                 Client-side Changes
-            ************************ */
+            **************************/
             function createTask(task) {
                 const todo = document.createElement("li");
                 todo.id = task.todo_id;

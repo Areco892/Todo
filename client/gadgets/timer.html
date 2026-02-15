@@ -18,7 +18,16 @@
             gap: 1rem;
         }
 
-        main{
+        main {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        main section, form{
+            width: 100%;
             display: flex;
             flex-direction: column;
             border: 2px solid black;
@@ -31,7 +40,7 @@
         #name{
             width: 100%;
         }
-        #timer{
+        #time{
             width: 100%;
             text-align: center;
         }
@@ -53,6 +62,15 @@
             font-size: 1.5rem;
         }
 
+        li{
+            list-style: none;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+        }
+
     </style>
 </head>
 
@@ -61,23 +79,30 @@
         <h1>Timer App</h1>
     </header>
     <main>
-        <input id="name" name="name" type="text" placeholder="Enter Timer Name" required>
-        <input id="timer" name="timer" type="text" maxlength="8" value="00:05:00" required readonly>
+        <form id="timer" action="/timer" method="POST">
+            <input id="name" name="name" type="text" placeholder="Enter Timer Name" required>
+            <input id="time" name="time" type="text" maxlength="8" value="00:05:00" required readonly>
 
-        <div id="incrementals">
-            <button id="add-five" type="button">+00:05</button>
-            <button id="add-ten" type="button">+00:10</button>
-            <button id="add-thirty" type="button">+00:30</button>
-        </div>
+            <div id="incrementals">
+                <button id="add-five" type="button">+00:05</button>
+                <button id="add-ten" type="button">+00:10</button>
+                <button id="add-thirty" type="button">+00:30</button>
+            </div>
 
-        <p id="timer-display">00:00:00</p>
-        
-        <div id="control-panel">
-            <button id="reset-btn" type="button" >Reset</button>
-            <button id="start-btn" type="button">Start</button>
-            <button id="stop-btn" type="button">Stop</button>
-            <button id="resume-btn" type="button">Resume</button>
-        </div>
+            <p id="timer-display">00:00:00</p>
+            
+            <div id="control-panel">
+                <button id="reset-btn" type="button" >Reset</button>
+                <button id="start-btn" type="button">Start</button>
+                <button id="stop-btn" type="button">Stop</button>
+                <button id="resume-btn" type="button">Resume</button>
+            </div>
+        </form>
+
+        <section>
+            <h2>Recents</h2>
+            <ul id="recent-timers"></ul>
+        </section>
     </main>
 
     <script>
@@ -86,7 +111,8 @@
         const oneHour = 60 * oneMinute;
         const maxTime = 99 * oneHour;
 
-        const timerInput = document.getElementById("timer");
+        const timer = document.getElementById("timer");
+        const timerInput = document.getElementById("time");
         const timerDisplay = document.getElementById("timer-display");
         const add5SecBtn = document.getElementById("add-five");
         const add10SecBtn = document.getElementById("add-ten");
@@ -95,6 +121,7 @@
         const stopBtn = document.getElementById("stop-btn");
         const resumeBtn = document.getElementById("resume-btn");
         const resetBtn = document.getElementById("reset-btn");
+        const recentTimers = document.getElementById("recent-timers");
 
         let timeInHrMinSec = "000000";
         let timeInSec = 0;
@@ -222,6 +249,98 @@
 
         resetBtn.addEventListener("click", resetTimer);
 
+        /**************************
+            Server-side Changes
+        **************************/
+        async function serverGetTimers() {
+            try {
+                const response = await fetch('http://localhost:5000/timers', {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" }
+                });
+
+                const data = await response.json();
+                return data;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function serverCreateTimer(timerName, timerTime) {
+            try {
+                const response = await fetch("http://localhost:5000/timers", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: timerName, time: timerTime })
+                });
+
+                const newTodo = await response.json();
+                return newTodo;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function serverDeleteTimer(timerId) {
+            try {
+                const response = await fetch(`http://localhost:5000/timers/${timerId}`, {
+                    method: "DELETE"
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        /**************************
+            Client-side Changes
+        **************************/
+        function createTimer(timer) {
+            const timerObject = document.createElement("li");
+            timerObject.id = timer.timer_id;
+
+            const timerName = document.createElement("span");
+            timerName.textContent = timer.name;
+            timerObject.appendChild(timerName);
+
+            const timerTime = document.createElement("span");
+            timerTime.textContent = timer.time;
+            timerObject.appendChild(timerTime);
+            
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.classList = "delete-btn";
+            deleteButton.textContent = "Delete";
+            timerObject.appendChild(deleteButton);
+            recentTimers.appendChild(timerObject);
+        }
+
+        async function addTimer(e) {
+            e.preventDefault();
+            const name = timer.name.value;
+            const time = timer.time.value;
+            const newTimer = await serverCreateTimer(name, time);
+            createTimer(newTimer.rows[0]);
+        }
+        
+        async function showRecentTimers() {
+            const timers = await serverGetTimers();
+            timers.forEach(timer => {
+                createTimer(timer);
+            });
+        }
+        showRecentTimers();
+
+        function removeTimer(e) {
+            if (e.target && e.target.classList.contains("delete-btn")) {
+                const li = e.target.closest("li");
+                const timerId = li.id;
+                serverDeleteTimer(timerId);
+                li.remove();
+            }
+        }
+
+        startBtn.addEventListener("click", addTimer);
+        recentTimers.addEventListener("click", removeTimer);
     </script>
 </body>
 
