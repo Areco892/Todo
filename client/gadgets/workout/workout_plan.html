@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Workout Planner</title>
+        <meta charset="utf-8">
+        <style>
+            *{
+                margin: 0;
+                padding: 0;
+            }
+            body {
+                margin: 1rem;
+            }
+            header {
+                text-align: center;
+            }
+            main{
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                justify-content: center;
+                align-items: center;
+            }
+            #workout-panel {
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 0.25rem;
+                margin: 1rem;
+            }
+            #workout-container {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+            section{
+                width: 350px;
+                border: 2px solid black;
+                border-radius: 2rem;
+                padding: 1rem;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 0.5rem;
+
+                ul {
+                    list-style: none;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1rem;
+                }
+                
+                li > ul {
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: end;
+                    gap: 1rem;
+                }
+            }
+
+            .button-panel {
+                display: flex;
+                flex-direction: row;
+                gap: 0.5rem;
+            }
+
+            .show{
+                display: flex;
+            }
+            .hide{
+                display: none;
+            }
+            
+
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>Workout Planner</h1>
+        </header>
+        <main>
+            <button id="create-btn" type="button">Create New Workout</button>
+            <button id="edit-mode-btn" type="button">Edit Workout</button>
+            
+            <form id="workout-panel" class="hide">
+                <h2>New Workout</h2>
+
+                <label for="name">Workout Name: </label>
+                <input id="name" name="name" type="text" required>
+                <button id="add-workout" type="button">Add Workout Plan</button>
+            </form>
+            
+            <div id="workout-container">
+            </div>
+        </main>
+
+        <script>
+            const workoutContainer = document.getElementById("workout-container");
+            const workoutPanel = document.getElementById("workout-panel");
+            const createBtn = document.getElementById("create-btn");
+            const addWorkoutBtn = document.getElementById("add-workout");
+            const editBtn = document.getElementById("edit-mode-btn");
+
+            /*******************
+                Server-side
+            *******************/
+            async function serverGetWorkouts() {
+                const response = await fetch("http://localhost:5000/workoutplans", {
+                    method: "GET"
+                });
+                const workouts = response.json();
+                return workouts;
+            }
+
+            async function serverGetExercises(workoutID) {
+                const response = await fetch(`http://localhost:5000/workoutplans/${workoutID}`, {
+                    method: "GET"
+                });
+                const workouts = response.json();
+                return workouts;
+            }
+
+            async function serverCreateWorkout(workoutName) {
+                const response = await fetch("http://localhost:5000/workoutplans", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: workoutName })
+                });
+                const newWorkout = response.json();
+                return newWorkout;
+            }
+
+            async function serverDeleteWorkout(workoutId) {
+                await fetch(`http://localhost:5000/workoutplans/${workoutId}`, {
+                    method: "DELETE"
+                });
+            }
+
+            /*******************
+                Client-side
+            *******************/
+            async function createWorkout(workout) {
+                // Create workout section
+                const workoutSection = document.createElement("section");
+                workoutSection.id = workout.wid;
+                
+                // Workout Name
+                const workoutName = document.createElement("h2");
+                workoutName.textContent = workout.name;
+
+                // Workout Exercises
+                const workoutExercises = document.createElement("ul");
+                workoutExercises.classList = "exercise-list";
+
+                const exerciseList = await serverGetExercises(workout.wid);
+                
+                if (exerciseList.length > 0) {
+                    exerciseList.forEach(exercise => {
+                    const exerciseComponent = document.createElement("li");
+                    
+                    const exerciseDescription = document.createElement("ul");
+                    exerciseDescription.textContent = exercise.name;
+                    const exerciseSets = document.createElement("li");
+                    exerciseSets.textContent = exercise.sets + "sets";
+                    const exerciseWeight = document.createElement("li");
+                    exerciseWeight.textContent = exercise.weight + "lbs";
+                    const exerciseReps = document.createElement("li");
+                    exerciseReps.textContent = exercise.reps + "reps";
+
+                    exerciseDescription.appendChild(exerciseSets);
+                    exerciseDescription.appendChild(exerciseWeight);
+                    exerciseDescription.appendChild(exerciseReps);
+
+                    exerciseComponent.appendChild(exerciseDescription);
+
+                    workoutExercises.appendChild(exerciseComponent);
+                });
+                }
+
+                // Add exercise link
+                const addExerciseLink = document.createElement("a");
+                addExerciseLink.href = "exercise_selection.html";
+                addExerciseLink.textContent = "+ Add Exercise";
+                addExerciseLink.classList.add('hide');
+
+                // Button Panel
+                const buttonPanel = document.createElement("div");
+                buttonPanel.classList = "button-panel";
+
+                const startWorkoutBtn = document.createElement("button");
+                startWorkoutBtn.type = "button";
+                startWorkoutBtn.textContent = "Start Workout";
+                
+
+                const editWorkoutBtn = document.createElement("button");
+                editWorkoutBtn.type = "button";
+                editWorkoutBtn.textContent = "Edit Workout";
+                editWorkoutBtn.classList.add('hide');
+                editWorkoutBtn.classList.add('edit-btn');
+
+                const deleteWorkoutBtn = document.createElement("button");
+                deleteWorkoutBtn.type = "button";
+                deleteWorkoutBtn.textContent = "Delete Workout";
+                deleteWorkoutBtn.classList.add('hide');
+                deleteWorkoutBtn.classList.add('delete-btn');
+
+                buttonPanel.appendChild(startWorkoutBtn);
+                buttonPanel.appendChild(editWorkoutBtn);
+                buttonPanel.appendChild(deleteWorkoutBtn);
+                
+                // Add all the elements to the workout section
+                workoutSection.appendChild(workoutName);
+                workoutSection.appendChild(workoutExercises);
+                workoutSection.appendChild(addExerciseLink);
+                workoutSection.appendChild(buttonPanel);
+
+                // Add the workout section to the workout container
+                workoutContainer.appendChild(workoutSection);
+            }
+        
+            async function initialRender() {
+                const workouts = await serverGetWorkouts();
+                workouts.forEach(workout => {
+                    createWorkout(workout);
+                });
+            }
+            initialRender();
+
+            function toggleCreateMode() {
+                workoutPanel.classList.toggle("hide");
+                workoutPanel.classList.toggle("show");
+            }
+
+            function toggleEditMode() {
+                const workouts = workoutContainer.querySelectorAll("section");
+                workouts.forEach(workout => {
+                    
+                    const addExerciseLink = workout.querySelector("a");
+                    const deleteWorkoutBtn = workout.querySelector(".delete-btn");
+
+                    addExerciseLink.classList.toggle("hide");
+                    deleteWorkoutBtn.classList.toggle("hide");
+                });
+            }
+            
+            async function addWorkout() {
+                const workoutName = workoutPanel.name.value;
+                const newWorkout = await serverCreateWorkout(workoutName);
+                createWorkout(newWorkout);
+            }
+
+            async function deleteWorkout(e) {
+                if (e.target && e.target.classList.contains("delete-btn")) {
+                    const workout = e.target.closest("section");
+                    const workoutId = workout.id;
+                    serverDeleteWorkout(workoutId);
+                    workout.remove();
+                }
+            }
+
+            createBtn.addEventListener("click", toggleCreateMode);
+            addWorkoutBtn.addEventListener("click", addWorkout);
+            editBtn.addEventListener("click", toggleEditMode);
+            workoutContainer.addEventListener("click", deleteWorkout);
+        </script>
+    </body>
+</html>
