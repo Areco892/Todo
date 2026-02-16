@@ -15,3 +15,7 @@ export async function updateExerciseService(id: string, name: string, image: str
 export async function deleteExerciseService(id: string) {
     return await ExerciseModel.deleteExercise(id);
 }
+
+export async function addExerciseService(wid: string, eid: string, sets: string, weight: string, reps: string) {
+    return await ExerciseModel.addExercise(wid, eid, sets, weight, reps);
+}

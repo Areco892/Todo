@@ -29,9 +29,10 @@ CREATE TABLE workout_exercise(
     id SERIAL PRIMARY KEY,
     wid INTEGER NOT NULL,
     eid INTEGER NOT NULL,
+    sets INTEGER,
     weight INTEGER,
     reps INTEGER,
-    sets INTEGER,
+    
 
     FOREIGN KEY (wid) REFERENCES workout(wid) ON DELETE CASCADE,
     FOREIGN KEY (eid) REFERENCES exercise(eid) ON DELETE CASCADE,
