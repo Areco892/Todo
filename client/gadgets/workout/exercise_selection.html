@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Exercise Selection</title>
+        <meta charset="utf-8">
+        <style>
+            *{
+                margin: 0;
+                padding: 0;
+            }
+            body {
+                margin: 1rem;
+            }
+            header {
+                text-align: center;
+            }
+            main{
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            #filter {
+                display: flex;
+                flex-direction: row;
+                justify-content: start;
+                align-items: center;
+                gap: 1rem;
+                span {
+                    border: 2px solid black;
+                    border-radius: 1rem;
+                    padding: 0.5rem;
+                }
+            }
+
+            #exercise-container {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 1rem;
+                margin: auto 1rem;
+                justify-content: center;
+                align-items: center;
+                img {
+                    width: 100%;
+                }
+            }
+
+            section{
+                width: 350px;
+                border: 2px solid black;
+                border-radius: 2rem;
+                padding: 1rem;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            #exercise-panel{
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .button-panel{
+                display: flex;
+                flex-direction: row;
+                gap: 1rem;
+                align-items: center;
+
+                button {
+                    border: 2px solid rgb(0, 0, 0);
+                    border-radius: 2rem;
+                    color: rgb(0, 0, 0);
+                    font-weight: 500;
+                    cursor: pointer;
+                    padding: 0.5rem;
+                    background-color: white;
+                }
+
+                button:hover{
+                    background-color: rgb(219, 233, 246);
+                }
+            }
+
+            .tag{
+                display: flex;
+                flex-direction: row;
+                gap: 0.5rem;
+                justify-content: center;
+                align-items: center;
+                
+                span {
+                    border: none;
+                    border-radius: 1rem;
+                    padding: 0.25rem 0.5rem;
+                    font-weight: 500;
+                }
+            }
+
+            .beginner {
+                background-color: rgb(40, 167, 69);
+                color: rgb(250, 240, 211);
+            }
+
+            .intermediate {
+                background-color: rgb(249, 139, 49);
+                color: rgb(252, 225, 205);
+            }
+
+            .advanced {
+                background-color: rgb(220, 53, 69);
+                color: rgb(246, 195, 201);
+            }
+
+            .hide {
+                display: none;
+            }
+
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>Exercise Selection</h1>
+        </header>
+        <main>
+            <form id="exercise-panel">
+                <h2>New Exercise</h2>
+
+                <label for="name">Exercise Name: </label>
+                <input id="name" name="name" type="text" required>
+
+                <label for="image">Exercise Image URL: </label>
+                <input id="image" name="image" type="text">
+
+                <label for="target">Exercise Target Muscle: </label>
+                <input id="target" name="target" type="text">
+
+                <label for="difficulty">Exercise Difficulty: </label>
+                <input id="difficulty" name="difficulty" type="text">
+
+                <input id="id" name="id" type="text" hidden>
+
+                <button id="add-exercise" type="button">Add Exercise</button>
+                <button id="edit-exercise" type="button">Edit Exercise</button>
+            </form>
+
+            <form id="filter">
+                <h2>Filter By</h2>
+
+                <select name="difficulty" id="difficulty">
+                    <option value="All">All Difficulties</option>
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                </select>
+
+                <select name="target" id="target">
+                    <option value="All">All Muscles</option>
+                    <option value="Core">Core</option>
+                    <option value="Biceps">Biceps</option>
+                    <option value="Calves">Calves</option>
+                    <option value="Chest">Chest</option>
+                    <option value="Glutes">Glutes</option>
+                    <option value="Back">Back</option>
+                    <option value="Shoulders">Shoulders</option>
+                    <option value="Forearms">Forearms</option>
+                    <option value="Quadriceps">Quadriceps</option>
+                    <option value="Triceps">Triceps</option>
+                </select>
+            </form>
+
+            <div id="exercise-container">
+            </div>
+        </main>
+        <script>
+            let exerciseContainer = document.getElementById("exercise-container");
+            const exercisePanel = document.getElementById("exercise-panel");
+            const addExerciseBtn = document.getElementById("add-exercise");
+            const editExerciseBtn = document.getElementById("edit-exercise");
+            const exerciseFilter = document.getElementById("filter");
+
+            const difficultLevel = { "Beginner": "beginner", "Intermediate": "intermediate", "Advanced": "advanced" };
+            
+            /************************
+                    Server-side     
+            ************************/
+            async function serverGetExercises(difficulty, target) {
+                try {
+                    const response = await fetch(`http://localhost:5000/exercises?difficulty=${difficulty}&target=${target}`, {
+                        method: "GET"
+                    });
+                    const exercises = await response.json();
+                    return exercises;
+                }
+                catch (error) {
+                    console.error(error);
+                }
+            }
+
+            async function serverCreateExercise(exerciseName, exerciseImage, exerciseTargetMuscle, exerciseDifficulty) {
+                try {
+                    const response = await fetch("http://localhost:5000/exercises", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json"},
+                        body: JSON.stringify({ name: exerciseName, image: exerciseImage, target: exerciseTargetMuscle, difficulty: exerciseDifficulty })
+                    });
+
+                    const newExercise = await response.json();
+                    return newExercise;
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
+            async function serverUpdateExercise(exerciseId, exerciseName, exerciseImage, exerciseTargetMuscle, exerciseDifficulty) {
+                try {
+                    const response = await fetch(`http://localhost:5000/exercises/${exerciseId}`,{
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name: exerciseName, image: exerciseImage, target: exerciseTargetMuscle, difficulty: exerciseDifficulty })
+                    });
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
+            async function serverDeleteExercise(exerciseId) {
+                try {
+                    const response = await fetch(`http://localhost:5000/exercises/${exerciseId}`,{
+                        method: "DELETE"
+                    });
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
+            async function serverGetSelectedExercises() {
+
+            }
+
+            /************************
+                    Client-side     
+            ************************/
+            function createExercise(exercise) {
+                // Create the exercise section
+                let exerciseSection = document.createElement("section");
+                exerciseSection.id = exercise.eid;
+                exerciseSection.classList = "exercise-item";
+
+                // Create the individual components of an exercise
+                let exerciseName = document.createElement("h2");
+                exerciseName.textContent = exercise.name;
+
+                let exerciseImage = document.createElement("img");
+                exerciseImage.src = exercise.image;
+                exerciseImage.alt = exercise.description;
+                
+                let exerciseTargetMuscle = document.createElement("span");
+                exerciseTargetMuscle.textContent = exercise.target;
+
+                let exerciseDifficulty = document.createElement("span");
+                exerciseDifficulty.textContent = exercise.difficulty;
+                exerciseDifficulty.classList = difficultLevel[exercise.difficulty];
+
+                let exerciseDifficultyTag = document.createElement("div");
+                exerciseDifficultyTag.classList = "tag"
+                let difficulty = document.createElement("p");
+                difficulty.textContent = "Difficulty: ";
+                exerciseDifficultyTag.appendChild(difficulty);
+                exerciseDifficultyTag.appendChild(exerciseDifficulty);
+
+                let exerciseTargetTag = document.createElement("div");
+                exerciseTargetTag.classList = "tag";
+                let target = document.createElement("p");
+                target.textContent = "Target Muscle: ";
+                exerciseTargetTag.appendChild(target);
+                exerciseTargetTag.appendChild(exerciseTargetMuscle);
+                
+                let exerciseAddBtn = document.createElement("button");
+                exerciseAddBtn.type = "button";
+                exerciseAddBtn.classList = "add-btn";
+                exerciseAddBtn.textContent = "Add Exercise";
+
+                let exerciseEditBtn = document.createElement("button");
+                exerciseEditBtn.type = "button";
+                exerciseEditBtn.classList = "edit-btn";
+                exerciseEditBtn.textContent = "Edit Exercise";
+
+                let deleteButton = document.createElement("button");
+                deleteButton.type = "button";
+                deleteButton.classList = "delete-btn";
+                deleteButton.textContent = "Delete";
+
+                let buttonPanel = document.createElement("div");
+                buttonPanel.classList = "button-panel";
+                buttonPanel.appendChild(exerciseAddBtn);
+                buttonPanel.appendChild(exerciseEditBtn);
+                buttonPanel.appendChild(deleteButton);
+
+                // Add all the elements of an exercise to the exercise section
+                exerciseSection.appendChild(exerciseName);
+                exerciseSection.appendChild(exerciseImage);
+                exerciseSection.appendChild(exerciseDifficultyTag);
+                exerciseSection.appendChild(exerciseTargetTag);
+                exerciseSection.appendChild(buttonPanel);
+
+                // Add the newly created exercise to the exercise container
+                exerciseContainer.appendChild(exerciseSection);
+            }
+
+            async function initialRender() {
+                const difficulty = exerciseFilter.difficulty.value;
+                const target = exerciseFilter.target.value;
+                const exercises = await serverGetExercises(difficulty, target);
+                exercises.forEach(exercise => {
+                    createExercise(exercise);
+                });
+            }
+            initialRender();
+
+            async function showExercises() {
+                exerciseContainer.querySelectorAll(".exercise-item").forEach(item => {
+                    item.classList.add("hide");
+                });
+                const difficulty = exerciseFilter.difficulty.value;
+                const target = exerciseFilter.target.value;
+                const exercises = await serverGetExercises(difficulty, target);
+                exercises.forEach(exercise => {
+                    const exerciseItem = document.getElementById(`${exercise.eid}`);
+                    exerciseItem.classList.remove("hide");
+                });
+            }
+            
+            async function addExercise() {
+                const exerciseName = exercisePanel.name.value;
+                const exerciseImage = exercisePanel.image.value;
+                const exerciseTargetMuscle = exercisePanel.target.value;
+                const exerciseDifficulty = exercisePanel.difficulty.value;
+                const newExercise = await serverCreateExercise(exerciseName, exerciseImage, exerciseTargetMuscle, exerciseDifficulty);
+                createExercise(newExercise.rows[0]);
+            }
+            
+            function editExercise() {
+                const exerciseId = exercisePanel.id.value;
+                const exerciseName = exercisePanel.name.value;
+                const exerciseImage = exercisePanel.image.value;
+                const exerciseTargetMuscle = exercisePanel.target.value;
+                const exerciseDifficulty = exercisePanel.difficulty.value;
+                serverUpdateExercise(exerciseId, exerciseName, exerciseImage, exerciseTargetMuscle, exerciseDifficulty);
+                
+                let currentExercise = document.getElementById(`${exerciseId}`);
+                currentExercise.querySelector("h2").textContent = exerciseName;
+                currentExercise.querySelector("img").src = exerciseImage;
+                currentExercise.querySelectorAll("span")[0].textContent = exerciseTargetMuscle;
+                currentExercise.querySelectorAll("span")[1].textContent = exerciseDifficulty;
+            }
+
+            function loadExerciseDetails(e) {
+                if (e.target && e.target.classList.contains("edit-btn")) {
+                    const exercise = e.target.closest("section");
+                    exercisePanel.id.value = exercise.id || "";
+                    exercisePanel.name.value = exercise.querySelector("h2").textContent || "";
+                    exercisePanel.image.value = exercise.querySelector("img").src || "";
+                    exercisePanel.target.value = exercise.querySelectorAll("span")[0].textContent || "";
+                    exercisePanel.difficulty.value = exercise.querySelectorAll("span")[1].textContent || "";
+                }
+            }
+
+            function deleteExercise(e) {
+                if (e.target && e.target.classList.contains("delete-btn")) {
+                    const exercise = e.target.closest("section");
+                    const exerciseId = exercise.id;
+                    serverDeleteExercise(exerciseId);
+                    exercise.remove();
+                }
+            }
+
+            addExerciseBtn.addEventListener("click", addExercise);
+            editExerciseBtn.addEventListener("click", editExercise);
+            exerciseContainer.addEventListener("click", deleteExercise);
+            exerciseContainer.addEventListener("click", loadExerciseDetails);
+            exerciseFilter.addEventListener("change", showExercises);
+
+        </script>
+    </body>
+</html>

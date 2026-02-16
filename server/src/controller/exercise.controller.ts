@@ -3,7 +3,8 @@ import * as ExerciseServices from "../services/exercise.service";
 
 export async function getExercises(req: Request, res: Response){
     try {
-        const exercises = await ExerciseServices.getExercisesService();
+        const { difficulty, target } = req.query;
+        const exercises = await ExerciseServices.getExercisesService(difficulty as string, target as string);
         res.json(exercises);
     } catch (error) {
         console.error(error);

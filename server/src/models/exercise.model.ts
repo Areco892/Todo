@@ -1,7 +1,28 @@
 import pool from "../db";
 
-export async function getExercises() {
-    const exercises = await pool.query("SELECT * FROM exercise;");
+export async function getExercises(difficulty: string, target: string) {
+    let exercises;
+    if (target == "All" && difficulty == "All") {
+        exercises = await pool.query("SELECT * FROM exercise;");
+    }
+    else if (target == "All") {
+        exercises = await pool.query(
+            "SELECT * FROM exercise WHERE difficulty = $1;",
+            [difficulty]
+        );
+    } 
+    else if (difficulty == "All") {
+        exercises = await pool.query(
+            "SELECT * FROM exercise WHERE target = $1;",
+            [target]
+        );
+    }
+    else {
+        exercises = await pool.query(
+            "SELECT * FROM exercise WHERE target = $1 AND difficulty = $2;",
+            [target, difficulty]
+        );
+    }
     return exercises.rows;
 }   
 

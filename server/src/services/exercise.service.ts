@@ -1,7 +1,7 @@
 import * as ExerciseModel from "../models/exercise.model";
 
-export async function getExercisesService() {
-    return await ExerciseModel.getExercises();
+export async function getExercisesService(difficulty: string, target: string) {
+    return await ExerciseModel.getExercises(difficulty, target);
 }
 
 export async function createExerciseService(name: string, image: string, target: string, difficulty: string) {
