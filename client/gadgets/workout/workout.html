@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Workout</title>
+        <meta charset="utf-8">
+        <style>
+
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>Workout Planner</h1>
+        </header>
+        
+        <main>
+            <section id="exercise-container">
+                
+            </section>
+            <section id="excercise-display">
+                <h2>Exercise Name</h2>
+                <progress value="60" max="100"></progress>
+                <picture>
+                    Picture
+                    <img src="img\kickbacks.webp">
+                </picture>
+                <button type="button">Start</button>
+            </section>
+        </main>
+
+        <script>
+            let exerciseContainer = document.getElementById("exercise-container");
+
+            /**************************
+                Server-side Changes
+            **************************/
+            async function serverGetWorkouts() {
+                try {
+                    const response = await fetch("http://localhost:5000/workouts", {
+                        method: "GET"
+                    });
+                    
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+            
+            async function serverCreateWorkout(workoutName, workoutImageUrl, workoutDescription) {
+                try {
+                    const response = await fetch("http://localhost:5000/workouts", {
+                        method: "POST",
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({ name: workoutName, image: workoutImageUrl, description: workoutDescription })
+                    });
+
+                    const newWorkout = await response.json();
+                    return newWorkout;
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
+            async function serverUpdateWorkout(workoutId, workoutName, workoutImageUrl, workoutDescription) {
+                try {
+                    const response = await fetch(`http://localhost:5000/workouts${workoutId}`, {
+                        method: "PUT",
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({ name: workoutName, image: workoutImageUrl, description: workoutDescription })
+                    })
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
+            async function serverDeleteWorkout(workoutId) {
+                try {
+                    const response = await fetch(`http://localhost:5000/workouts${workoutId}`, {
+                        method: "DELETE"
+                    })
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+            
+            /**************************
+                Client-side Changes
+            **************************/
+            function createWorkout(workout) {
+                console.log(workout);
+                let workoutElement = document.createElement("section");
+                workoutElement.id = workout.workoutId;
+
+                let workoutName = document.createElement("span");
+                workoutName.textContent = workout.name;
+                workoutElement.appendChild(workoutName);
+
+                let workoutImage = document.createElement("img");
+                workoutImage.src = workout.image;
+                workoutImage.alt = workout.description;
+                workoutElement.appendChild(workoutImage);
+
+                let workoutDescription = document.createElement("span");
+                workoutDescription.textContent = workout.description;
+                workoutElement.appendChild(workoutDescription);
+
+                exerciseContainer.appendChild(workoutElement);
+            }
+
+            async function showAllWorkouts() {
+                let workouts = await serverGetWorkouts();
+                workouts.forEach(workout => {
+                    createWorkout(workout);
+                });
+            }
+            showAllWorkouts();
+            
+        </script>
+    </body>
+</html>
