@@ -47,7 +47,7 @@
             }
 
             section{
-                width: 350px;
+                width: 300px;
                 border: 2px solid black;
                 border-radius: 2rem;
                 padding: 1rem;
@@ -239,10 +239,6 @@
                 }
             }
 
-            async function serverGetSelectedExercises() {
-
-            }
-
             /************************
                     Client-side     
             ************************/
@@ -344,7 +340,7 @@
                 const newExercise = await serverCreateExercise(exerciseName, exerciseImage, exerciseTargetMuscle, exerciseDifficulty);
                 createExercise(newExercise.rows[0]);
             }
-            
+
             function editExercise() {
                 const exerciseId = exercisePanel.id.value;
                 const exerciseName = exercisePanel.name.value;
@@ -366,8 +362,8 @@
                     exercisePanel.id.value = exercise.id || "";
                     exercisePanel.name.value = exercise.querySelector("h2").textContent || "";
                     exercisePanel.image.value = exercise.querySelector("img").src || "";
-                    exercisePanel.target.value = exercise.querySelectorAll("span")[0].textContent || "";
-                    exercisePanel.difficulty.value = exercise.querySelectorAll("span")[1].textContent || "";
+                    exercisePanel.difficulty.value = exercise.querySelectorAll("span")[0].textContent || "";
+                    exercisePanel.target.value = exercise.querySelectorAll("span")[1].textContent || "";
                 }
             }
 
