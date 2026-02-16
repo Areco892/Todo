@@ -53,3 +53,12 @@ export async function deleteExercise(id: string) {
     );
     return "Exercise was deleted!";
 }
+
+export async function addExercise(wid: string, eid: string, sets: string, weight: string, reps: string) {
+    const exercise = await pool.query(
+        `INSERT INTO workout_exercise (wid, eid, sets, weight, reps)
+        VALUES ($1, $2, $3, $4, $5)`, 
+        [wid, eid, sets, weight, reps]
+    );
+    return exercise.rows[0];
+}
