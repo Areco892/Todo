@@ -20,6 +20,9 @@
                 gap: 1rem;
                 justify-content: center;
                 align-items: center;
+                a{
+                    align-self: start;
+                }
             }
             #stopwatch {
                 display: flex;
@@ -65,6 +68,7 @@
                 justify-content: center;
                 align-items: center;
                 div {
+                    width: 700px;
                     display: flex;
                     flex-direction: row;
                     flex-wrap: wrap;
@@ -88,12 +92,26 @@
                 flex-wrap: wrap;
                 border: 2px solid black;
                 border-radius: 2rem;
+                justify-content: center;
+                align-items: center;
+                padding: 1rem;
+                h2{
+                    width: 100%;
+                    text-align: center;
+                }
             }
             .exercise-progress {
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
+
+                span{
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: wrap;
+                    gap: 1rem;
+                }
                 
                 progress{
                     -webkit-appearance: none;
@@ -180,7 +198,8 @@
             }
 
             .in-progress {
-                border-radius: green;
+                background-color: rgba(62, 255, 62, 0.358);
+                border: 0.5rem solid green;
             }
 
         </style>
@@ -191,6 +210,7 @@
         </header>
         
         <main>
+            <a href="workout_plan.html">&#8592 See Workout Plans</a>
             <div id="stopwatch">
                 <p id="timer">00:00:00</p>
                 <div id="button-panel">
@@ -230,38 +250,38 @@
             **************************/
            function createExercise(exercise) {
                 // Create the exercise section
-                let exerciseItem = document.createElement("div");
-                exerciseItem.classList = "exercise-item"
+                const exerciseItem = document.createElement("div");
+                exerciseItem.classList = "exercise-item";
+                const exerciseName = document.createElement("h2");
+                exerciseName.textContent = exercise.name;
                 
-                let exerciseDescription = document.createElement("section");
-                exerciseDescription.id = exercise.eid;
+                const exerciseDescription = document.createElement("section");
+                exerciseDescription.setAttribute("data-id", exercise.eid);
                 exerciseDescription.classList = "exercise-description";
 
                 // Create the individual components of an exercise
-                let exerciseName = document.createElement("h2");
-                exerciseName.textContent = exercise.name;
-
-                let exerciseImage = document.createElement("img");
+                
+                const exerciseImage = document.createElement("img");
                 exerciseImage.src = exercise.image;
                 exerciseImage.alt = exercise.description;
                 
-                let exerciseTargetMuscle = document.createElement("span");
+                const exerciseTargetMuscle = document.createElement("span");
                 exerciseTargetMuscle.textContent = exercise.target;
 
-                let exerciseDifficulty = document.createElement("span");
+                const exerciseDifficulty = document.createElement("span");
                 exerciseDifficulty.textContent = exercise.difficulty;
                 exerciseDifficulty.classList = exercise.difficulty.toLowerCase();
 
-                let exerciseDifficultyTag = document.createElement("div");
+                const exerciseDifficultyTag = document.createElement("div");
                 exerciseDifficultyTag.classList = "tag"
-                let difficulty = document.createElement("p");
+                const difficulty = document.createElement("p");
                 difficulty.textContent = "Difficulty: ";
                 exerciseDifficultyTag.appendChild(difficulty);
                 exerciseDifficultyTag.appendChild(exerciseDifficulty);
 
-                let exerciseTargetTag = document.createElement("div");
+                const exerciseTargetTag = document.createElement("div");
                 exerciseTargetTag.classList = "tag";
-                let target = document.createElement("p");
+                const target = document.createElement("p");
                 target.textContent = "Target Muscle: ";
                 exerciseTargetTag.appendChild(target);
                 exerciseTargetTag.appendChild(exerciseTargetMuscle);
@@ -272,20 +292,28 @@
                 exerciseDescription.appendChild(exerciseDifficultyTag);
                 exerciseDescription.appendChild(exerciseTargetTag);
 
-                let exerciseProgress = document.createElement("section");
-                exerciseProgress.id = exercise.eid;
+                const exerciseProgress = document.createElement("section");
+                exerciseProgress.setAttribute("data-id", exercise.eid);
                 exerciseProgress.classList = "exercise-progress";
 
-                let progressTitle = document.createElement("h2");
+                const progressTitle = document.createElement("h2");
                 progressTitle.textContent = "Progress";
-                
-                let progressBar = document.createElement("progress");
+
+                const exerciseSpecifications = document.createElement("span");
+                const exerciseWeight = document.createElement("p"); 
+                exerciseWeight.textContent = `Weight: ${exercise.weight} lbs`;
+                const exerciseReps = document.createElement("p"); 
+                exerciseReps.textContent = `Reps: ${exercise.reps} reps`;
+                exerciseSpecifications.appendChild(exerciseWeight);
+                exerciseSpecifications.appendChild(exerciseReps);
+
+                const progressBar = document.createElement("progress");
                 progressBar.value = 0;
                 progressBar.max = 1;
                 progressBar.setAttribute("data-total", exercise.sets);
                 progressBar.setAttribute("data-completed", 0);
 
-                let exerciseSets = document.createElement("ul");
+                const exerciseSets = document.createElement("ul");
                 for (let i = 0; i < exercise.sets; i++) {
                     const set = document.createElement("li");
                     const p = document.createElement("p");
@@ -301,10 +329,12 @@
                 }
 
                 exerciseProgress.appendChild(progressTitle);
+                exerciseProgress.appendChild(exerciseSpecifications);
                 exerciseProgress.appendChild(progressBar);
                 exerciseProgress.appendChild(exerciseSets);
 
                 // Add the newly created exercise to the exercise container
+                exerciseItem.appendChild(exerciseName);
                 exerciseItem.appendChild(exerciseDescription);
                 exerciseItem.appendChild(exerciseProgress);
 
@@ -409,8 +439,12 @@
             /**************************
                 Progress Tracker
             **************************/
-            function indicateCurrentExercise() {
-
+            function indicateCurrentExercise(e) {
+                if (e.target && e.target.classList.contains("done-btn")) return;
+                const exerciseItem = e.target.closest(".exercise-item");
+                if (exerciseItem) {
+                    exerciseItem.classList.toggle("in-progress");
+                }
             }
 
             function recordTime() {
@@ -419,11 +453,10 @@
                 
                 congratulationBanner.textContent = `Congratulations, you completed the workout in ${formattedTime}!`;
                 congratulationBanner.classList.toggle("hide");
-                exerciseContainer.removeEventListener("click", markComplete);
+                exerciseContainer.removeEventListener("click", markSetComplete);
             }
 
-            function markComplete(e) {
-                console.log(timeInSec)
+            function markSetComplete(e) {
                 if (timeInSec <= 1) {
                     return;
                 }
@@ -436,10 +469,13 @@
                         progressBar.setAttribute("data-completed", completed);
                         progressBar.value = completed / total;
                         completeExercises += 1;
+                        e.target.disabled = true;
+                        e.target.classList.add("completed");
+                        e.target.textContent = "Completed!";
                     }
-                    e.target.disabled = true;
-                    e.target.classList.add("completed");
-                    e.target.textContent = "Completed!";
+                    if (completed >= total) {
+                        markExerciseComplete(e.target);
+                    }
                 }
                 if (completeExercises >= totalExercises) {
                     stopTimer();
@@ -447,7 +483,15 @@
                 }
             }
 
-            exerciseContainer.addEventListener("click", markComplete);
+            function markExerciseComplete(e) {
+                const exerciseItem = e.closest(".exercise-item");
+                if (exerciseItem) {
+                    exerciseItem.classList.toggle("in-progress");
+                }
+            }
+
+            exerciseContainer.addEventListener("click", markSetComplete);
+            // exerciseContainer.addEventListener("click", indicateCurrentExercise);
 
         </script>
     </body>
