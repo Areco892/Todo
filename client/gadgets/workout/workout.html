@@ -21,6 +21,41 @@
                 justify-content: center;
                 align-items: center;
             }
+            #stopwatch {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+                border: 2px solid black;
+                border-radius: 2rem;
+                width: 600px;
+                > p{
+                    width: 100%;
+                    font-size: 1.5rem;
+                    background: gray;
+                    border-radius: 2rem;
+                    text-align: center;
+                    color: white;
+                }
+            }
+            #button-panel {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 1rem;
+                justify-content: center;
+                align-items: center;
+                button {
+                    width: 5rem;
+                }
+            }
+            #congratulations {
+                background-color: rgb(255, 191, 53);
+                color: rgb(255, 249, 231);
+                padding: 0.5rem;
+                border: 2px solid rgb(255, 191, 53);
+                border-radius: 2rem;
+            }
             #exercise-container {
                 display: flex;
                 flex-direction: column;
@@ -103,7 +138,7 @@
             }
 
             .done-btn:hover {
-                background-color: rgb(69, 186, 69);
+                background-color: green;
             }
 
             .tag{
@@ -141,11 +176,7 @@
             }
 
             .completed {
-                background-color: gray;
-            }
-            
-            .completed:hover {
-                background-color: gray;
+                background-color: green;
             }
 
             .in-progress {
@@ -160,8 +191,16 @@
         </header>
         
         <main>
-            <button id="start-timer" type="button">Start Workout</button>
-            <p id="timer">00:00</p>
+            <div id="stopwatch">
+                <p id="timer">00:00:00</p>
+                <div id="button-panel">
+                    <button id="start-timer" type="button">Start</button>
+                    <button id="stop-timer" type="button">Stop</button>
+                    <button id="resume-timer" type="button">Resume</button>
+                    <button id="reset-timer" type="button">Reset</button>
+                </div>
+            </div>
+            <h2 id="congratulations" class="hide"></h2>
             <div id="exercise-container">
             </div>
         </main>
@@ -170,8 +209,10 @@
             const params = new URLSearchParams(window.location.search);
             const workoutId = params.get("wid");
             let exerciseContainer = document.getElementById("exercise-container");
-            const startTimerBtn = document.getElementById("start-timer");
-            const timer = document.getElementById("timer");
+            const congratulationBanner = document.getElementById("congratulations");
+
+            let completeExercises = 0;
+            let totalExercises = 0
 
             /**************************
                 Server-side Changes
@@ -256,6 +297,7 @@
                     doneBtn.textContent = "Done";
                     set.appendChild(doneBtn);
                     exerciseSets.appendChild(set);
+                    totalExercises += 1;
                 }
 
                 exerciseProgress.appendChild(progressTitle);
@@ -277,8 +319,114 @@
                 });
             }
             showExercises();
+
+            /**********************
+                    Timer
+            **********************/
+            const oneSecond = 1;
+            const oneMinute = 60 * oneSecond;
+            const oneHour = 60 * oneMinute;
+            const maxTime = 99 * oneHour;
+            let timeInHrMinSec = "000000";
+            let timeInSec = 1;
+            let stopwatch;
+
+            const startTimerBtn = document.getElementById("start-timer");
+            const stopTimerBtn = document.getElementById("stop-timer");
+            const resumeTimerBtn = document.getElementById("resume-timer");
+            const resetTimerBtn = document.getElementById("reset-timer");
+            const timer = document.getElementById("timer");
+
+            function formatTime(timeString) {
+                return (
+                    timeString.substring(0,2) + ":" +
+                    timeString.substring(2,4) + ":" +
+                    timeString.substring(4,6)
+                );
+            } 
+
+            function convertSecToHrMinSec(time) {
+                let hours = "00", minutes = "00", seconds = "00";
+                hours += Math.floor(time / oneHour);
+                minutes += Math.floor((time % oneHour) / oneMinute);
+                seconds += time % oneMinute; 
+                return hours.slice(-2) + minutes.slice(-2) + seconds.slice(-2);
+            }
+
+            function convertHrMinSecToSec(timeHrMinSec) {
+                let hours = parseInt(timeHrMinSec.substring(0,2));
+                let minutes = parseInt(timeHrMinSec.substring(3,5));
+                let seconds = parseInt(timeHrMinSec.substring(6,8));
+                let timeSec = hours * oneHour + minutes * oneMinute + seconds
+                return timeSec;
+            }
             
+            function startTimer() {
+                if (stopwatch) return;
+
+                let currentTime = convertSecToHrMinSec(timeInSec);
+
+                if (timeInSec >= 0) {
+                    stopwatch = setInterval(() => {
+                        currentTime = convertSecToHrMinSec(timeInSec);
+                        timer.textContent = formatTime(currentTime);
+                        timeInSec++;
+                    }, 1000);
+                } else {
+                    clearInterval(stopwatch);
+                    return;
+                }
+            }
+
+            function stopTimer() {
+                clearInterval(stopwatch);
+                stopwatch = null;
+            }
+
+            function resumeTimer() {
+                stopwatch = setInterval(() => {
+                    if (timeInSec < 0) {
+                        clearInterval(stopwatch);
+                        return;
+                    }
+                    let currentTime = convertSecToHrMinSec(timeInSec);
+                    timer.textContent = formatTime(currentTime);
+                    timeInSec++;
+                }, 1000);
+            }
+
+            function resetTimer() {
+                stopTimer();
+                timer.textContent = "00:00:00";
+                timeInSec = 0;
+            }
+
+            startTimerBtn.addEventListener("click", startTimer);
+            stopTimerBtn.addEventListener("click", stopTimer);
+            resumeTimerBtn.addEventListener("click", resumeTimer);
+            resetTimerBtn.addEventListener("click", resetTimer);
+
+            /**************************
+                Progress Tracker
+            **************************/
+            function indicateCurrentExercise() {
+
+            }
+
+            function recordTime() {
+                const time = convertSecToHrMinSec(timeInSec - 1);
+                const formattedTime = formatTime(time);
+                
+                congratulationBanner.textContent = `Congratulations, you completed the workout in ${formattedTime}!`;
+                congratulationBanner.classList.toggle("hide");
+                exerciseContainer.removeEventListener("click", markComplete);
+            }
+
             function markComplete(e) {
+                console.log(timeInSec)
+                if (timeInSec <= 1) {
+                    return;
+                }
                 if (e.target && e.target.classList.contains("done-btn")) {
                     const progressBar = e.target.closest("section").querySelector("progress");
                     const total = progressBar.getAttribute("data-total");
@@ -287,22 +435,18 @@
                         completed += 1;
                         progressBar.setAttribute("data-completed", completed);
                         progressBar.value = completed / total;
+                        completeExercises += 1;
                     }
                     e.target.disabled = true;
                     e.target.classList.add("completed");
+                    e.target.textContent = "Completed!";
+                }
+                if (completeExercises >= totalExercises) {
+                    stopTimer();
+                    recordTime();
                 }
             }
 
-            function startTimer() {
-                
-            }
-
-            function indicateCurrentExercise() {
-
-            }
-
-            startTimerBtn.addEventListener("click", startTimer);
-            startTimerBtn.addEventListener("click", indicateCurrentExercise);
             exerciseContainer.addEventListener("click", markComplete);
 
         </script>
