@@ -4,117 +4,307 @@
         <title>Workout</title>
         <meta charset="utf-8">
         <style>
+            *{
+                margin: 0;
+                padding: 0;
+            }
+            body {
+                margin: 1rem;
+            }
+            header {
+                text-align: center;
+            }
+            main{
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                justify-content: center;
+                align-items: center;
+            }
+            #exercise-container {
+                display: flex;
+                flex-direction: column;
+                flex-wrap: wrap;
+                gap: 1rem;
+                margin: auto 1rem;
+                justify-content: center;
+                align-items: center;
+                div {
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: wrap;
+                }
+            }
+            section{
+                width: 300px;
+                padding: 1rem;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 0.5rem;
+                img {
+                    width: 100%;
+                }
+            }
+            .exercise-item {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                border: 2px solid black;
+                border-radius: 2rem;
+            }
+            .exercise-progress {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                
+                progress{
+                    -webkit-appearance: none;
+                    appearance: none;
+                }
+
+                progress::-webkit-progress-bar {
+                    background-color: rgb(255, 255, 255);
+                    border: 2px solid black;
+                    border-radius: 2rem;
+                }
+
+                progress::-webkit-progress-value {
+                    background-color: rgb(0, 159, 0);
+                    border-radius: 2rem;
+                }
+
+                ul {
+                    width: 100%;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1rem;
+                    justify-content: center;
+                    align-items: space-between;
+                    li {
+                        list-style: none;
+                        display: flex;
+                        flex-direction: row;
+                        justify-content: space-evenly;
+                        align-items: center;
+                    }
+                }
+            }
+            .done-btn{
+                border: 2px solid rgb(0, 0, 0);
+                border-radius: 2rem;
+                color: rgb(0, 0, 0);
+                font-weight: 500;
+                cursor: pointer;
+                padding: 0.5rem;
+                background-color: white;
+            }
+
+            .done-btn:hover {
+                background-color: rgb(69, 186, 69);
+            }
+
+            .tag{
+                display: flex;
+                flex-direction: row;
+                gap: 0.5rem;
+                justify-content: center;
+                align-items: center;
+                
+                span {
+                    border: none;
+                    border-radius: 1rem;
+                    padding: 0.25rem 0.5rem;
+                    font-weight: 500;
+                }
+            }
+
+            .beginner {
+                background-color: rgb(40, 167, 69);
+                color: rgb(250, 240, 211);
+            }
+
+            .intermediate {
+                background-color: rgb(249, 139, 49);
+                color: rgb(252, 225, 205);
+            }
+
+            .advanced {
+                background-color: rgb(220, 53, 69);
+                color: rgb(246, 195, 201);
+            }
+
+            .hide {
+                display: none;
+            }
+
+            .completed {
+                background-color: gray;
+            }
+            
+            .completed:hover {
+                background-color: gray;
+            }
+
+            .in-progress {
+                border-radius: green;
+            }
 
         </style>
     </head>
     <body>
         <header>
-            <h1>Workout Planner</h1>
+            <h1>Workout</h1>
         </header>
         
         <main>
-            <section id="exercise-container">
-                
-            </section>
-            <section id="excercise-display">
-                <h2>Exercise Name</h2>
-                <progress value="60" max="100"></progress>
-                <picture>
-                    Picture
-                    <img src="img\kickbacks.webp">
-                </picture>
-                <button type="button">Start</button>
-            </section>
+            <button id="start-timer" type="button">Start Workout</button>
+            <p id="timer">00:00</p>
+            <div id="exercise-container">
+            </div>
         </main>
 
         <script>
+            const params = new URLSearchParams(window.location.search);
+            const workoutId = params.get("wid");
             let exerciseContainer = document.getElementById("exercise-container");
+            const startTimerBtn = document.getElementById("start-timer");
+            const timer = document.getElementById("timer");
 
             /**************************
                 Server-side Changes
             **************************/
-            async function serverGetWorkouts() {
-                try {
-                    const response = await fetch("http://localhost:5000/workouts", {
-                        method: "GET"
-                    });
-                    
-                    const data = await response.json();
-                    return data;
-                } catch (error) {
-                    console.error(error);
-                }
+            async function serverGetExercises(workoutID) {
+                const response = await fetch(`http://localhost:5000/workouts/${workoutID}`, {
+                    method: "GET"
+                });
+                const exercises = await response.json();
+                return exercises;
             }
-            
-            async function serverCreateWorkout(workoutName, workoutImageUrl, workoutDescription) {
-                try {
-                    const response = await fetch("http://localhost:5000/workouts", {
-                        method: "POST",
-                        headers: {"Content-Type": "application/json"},
-                        body: JSON.stringify({ name: workoutName, image: workoutImageUrl, description: workoutDescription })
-                    });
-
-                    const newWorkout = await response.json();
-                    return newWorkout;
-                } catch (error) {
-                    console.error(error);
-                }
-            }
-
-            async function serverUpdateWorkout(workoutId, workoutName, workoutImageUrl, workoutDescription) {
-                try {
-                    const response = await fetch(`http://localhost:5000/workouts${workoutId}`, {
-                        method: "PUT",
-                        headers: {"Content-Type": "application/json"},
-                        body: JSON.stringify({ name: workoutName, image: workoutImageUrl, description: workoutDescription })
-                    })
-                } catch (error) {
-                    console.error(error);
-                }
-            }
-
-            async function serverDeleteWorkout(workoutId) {
-                try {
-                    const response = await fetch(`http://localhost:5000/workouts${workoutId}`, {
-                        method: "DELETE"
-                    })
-                } catch (error) {
-                    console.error(error);
-                }
-            }
-            
+    
             /**************************
                 Client-side Changes
             **************************/
-            function createWorkout(workout) {
-                console.log(workout);
-                let workoutElement = document.createElement("section");
-                workoutElement.id = workout.workoutId;
+           function createExercise(exercise) {
+                // Create the exercise section
+                let exerciseItem = document.createElement("div");
+                exerciseItem.classList = "exercise-item"
+                
+                let exerciseDescription = document.createElement("section");
+                exerciseDescription.id = exercise.eid;
+                exerciseDescription.classList = "exercise-description";
 
-                let workoutName = document.createElement("span");
-                workoutName.textContent = workout.name;
-                workoutElement.appendChild(workoutName);
+                // Create the individual components of an exercise
+                let exerciseName = document.createElement("h2");
+                exerciseName.textContent = exercise.name;
 
-                let workoutImage = document.createElement("img");
-                workoutImage.src = workout.image;
-                workoutImage.alt = workout.description;
-                workoutElement.appendChild(workoutImage);
+                let exerciseImage = document.createElement("img");
+                exerciseImage.src = exercise.image;
+                exerciseImage.alt = exercise.description;
+                
+                let exerciseTargetMuscle = document.createElement("span");
+                exerciseTargetMuscle.textContent = exercise.target;
 
-                let workoutDescription = document.createElement("span");
-                workoutDescription.textContent = workout.description;
-                workoutElement.appendChild(workoutDescription);
+                let exerciseDifficulty = document.createElement("span");
+                exerciseDifficulty.textContent = exercise.difficulty;
+                exerciseDifficulty.classList = exercise.difficulty.toLowerCase();
 
-                exerciseContainer.appendChild(workoutElement);
+                let exerciseDifficultyTag = document.createElement("div");
+                exerciseDifficultyTag.classList = "tag"
+                let difficulty = document.createElement("p");
+                difficulty.textContent = "Difficulty: ";
+                exerciseDifficultyTag.appendChild(difficulty);
+                exerciseDifficultyTag.appendChild(exerciseDifficulty);
+
+                let exerciseTargetTag = document.createElement("div");
+                exerciseTargetTag.classList = "tag";
+                let target = document.createElement("p");
+                target.textContent = "Target Muscle: ";
+                exerciseTargetTag.appendChild(target);
+                exerciseTargetTag.appendChild(exerciseTargetMuscle);
+
+                // Add all the elements of an exercise to the exercise section
+                exerciseDescription.appendChild(exerciseName);
+                exerciseDescription.appendChild(exerciseImage);
+                exerciseDescription.appendChild(exerciseDifficultyTag);
+                exerciseDescription.appendChild(exerciseTargetTag);
+
+                let exerciseProgress = document.createElement("section");
+                exerciseProgress.id = exercise.eid;
+                exerciseProgress.classList = "exercise-progress";
+
+                let progressTitle = document.createElement("h2");
+                progressTitle.textContent = "Progress";
+                
+                let progressBar = document.createElement("progress");
+                progressBar.value = 0;
+                progressBar.max = 1;
+                progressBar.setAttribute("data-total", exercise.sets);
+                progressBar.setAttribute("data-completed", 0);
+
+                let exerciseSets = document.createElement("ul");
+                for (let i = 0; i < exercise.sets; i++) {
+                    const set = document.createElement("li");
+                    const p = document.createElement("p");
+                    p.textContent = `Set ${i+1}`;
+                    set.appendChild(p);
+                    const doneBtn = document.createElement("button");
+                    doneBtn.type = "button";
+                    doneBtn.classList = "done-btn";
+                    doneBtn.textContent = "Done";
+                    set.appendChild(doneBtn);
+                    exerciseSets.appendChild(set);
+                }
+
+                exerciseProgress.appendChild(progressTitle);
+                exerciseProgress.appendChild(progressBar);
+                exerciseProgress.appendChild(exerciseSets);
+
+                // Add the newly created exercise to the exercise container
+                exerciseItem.appendChild(exerciseDescription);
+                exerciseItem.appendChild(exerciseProgress);
+
+                exerciseContainer.appendChild(exerciseItem);
             }
 
-            async function showAllWorkouts() {
-                let workouts = await serverGetWorkouts();
-                workouts.forEach(workout => {
-                    createWorkout(workout);
+            async function showExercises() {
+                let exercises = await serverGetExercises(workoutId);
+                
+                exercises.forEach(exercise => {
+                    createExercise(exercise);
                 });
             }
-            showAllWorkouts();
+            showExercises();
             
+            function markComplete(e) {
+                if (e.target && e.target.classList.contains("done-btn")) {
+                    const progressBar = e.target.closest("section").querySelector("progress");
+                    const total = progressBar.getAttribute("data-total");
+                    let completed = parseInt(progressBar.getAttribute("data-completed"));
+                    if (completed < total) {
+                        completed += 1;
+                        progressBar.setAttribute("data-completed", completed);
+                        progressBar.value = completed / total;
+                    }
+                    e.target.disabled = true;
+                    e.target.classList.add("completed");
+                }
+            }
+
+            function startTimer() {
+                
+            }
+
+            function indicateCurrentExercise() {
+
+            }
+
+            startTimerBtn.addEventListener("click", startTimer);
+            startTimerBtn.addEventListener("click", indicateCurrentExercise);
+            exerciseContainer.addEventListener("click", markComplete);
+
         </script>
     </body>
 </html>

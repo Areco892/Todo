@@ -132,8 +132,8 @@
                 const response = await fetch(`http://localhost:5000/workoutplans/${workoutID}`, {
                     method: "GET"
                 });
-                const workouts = await response.json();
-                return workouts;
+                const exercises = await response.json();
+                return exercises;
             }
 
             async function serverCreateWorkout(workoutName) {
@@ -240,12 +240,8 @@
                 const startWorkoutBtn = document.createElement("button");
                 startWorkoutBtn.type = "button";
                 startWorkoutBtn.textContent = "Start Workout";
-                
-                // const editWorkoutBtn = document.createElement("button");
-                // editWorkoutBtn.type = "button";
-                // editWorkoutBtn.textContent = "Edit Workout";
-                // editWorkoutBtn.classList.add('hide');
-                // editWorkoutBtn.classList.add('edit-btn');
+                startWorkoutBtn.classList.add("start-btn")
+                startWorkoutBtn.setAttribute("data-id", workout.wid)
 
                 const deleteWorkoutBtn = document.createElement("button");
                 deleteWorkoutBtn.type = "button";
@@ -254,7 +250,6 @@
                 deleteWorkoutBtn.classList.add('delete-btn');
 
                 buttonPanel.appendChild(startWorkoutBtn);
-                // buttonPanel.appendChild(editWorkoutBtn);
                 buttonPanel.appendChild(deleteWorkoutBtn);
                 
                 // Add all the elements to the workout section
@@ -336,12 +331,18 @@
                 }
             }
 
+            function startWorkout(e) {
+                if (e.target && e.target.classList.contains("start-btn")) {
+                    window.location.href = `workout.html?wid=${e.target.getAttribute("data-id")}`;
+                }
+            }
             createBtn.addEventListener("click", toggleCreateMode);
             addWorkoutBtn.addEventListener("click", addWorkout);
             editBtn.addEventListener("click", toggleEditMode);
             workoutContainer.addEventListener("click", deleteWorkout);
             workoutContainer.addEventListener("click", deleteExercise);
             workoutContainer.addEventListener("click", editWorkoutName);
+            workoutContainer.addEventListener("click", startWorkout);
         </script>
     </body>
 </html>
