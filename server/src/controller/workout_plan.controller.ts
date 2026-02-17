@@ -33,11 +33,34 @@ export async function createWorkout(req: Request, res: Response) {
     }
 }
 
+export async function updateWorkout(req: Request, res: Response) {
+    try {
+        const id = req.params.id as string;
+        const { name } = req.body;
+        const updatedWorkout = await WorkoutPlanServices.updateWorkoutService(id, name);
+        res.json(updatedWorkout);
+    } catch (error) {
+        console.error(error);
+        res.send(500).json({ message: "Server error." });
+    }
+}
+
 export async function deleteWorkout(req: Request, res: Response) {
     try {
         const workoutId = req.params.id as string;
         const deletedWorkout = await WorkoutPlanServices.deleteWorkoutService(workoutId);
         res.json({ message: "Workout was deleted!" });
+    } catch (error) {
+        console.error(error);
+        res.send(500).json({ message: "Server error." });
+    }
+}
+
+export async function deleteExercise(req: Request, res: Response) {
+    try {
+        const { wid, eid } = req.params;
+        await WorkoutPlanServices.deleteExerciseService(wid as string, eid as string);
+        res.json({ message: "Exercise was deleted!" });
     } catch (error) {
         console.error(error);
         res.send(500).json({ message: "Server error." });
