@@ -132,6 +132,19 @@
                 display: none;
             }
 
+            .notification {
+                background-color: rgba(2, 255, 2, 0.708);
+                padding: 0.5rem;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 1s ease-out;
+            }
+
+            .notification.show {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
         </style>
     </head>
     <body>
@@ -181,17 +194,18 @@
                     <input id="exercise-name" name="name" type="text" readonly required>
 
                     <label for="sets">Exercise Sets: </label>
-                    <input id="sets" name="sets" type="number">
+                    <input id="sets" name="sets" type="number" min="1">
 
                     <label for="weight">Exercise Weight: </label>
-                    <input id="weight" name="weight" type="number">
+                    <input id="weight" name="weight" type="number" min="1">
 
                     <label for="reps">Exercise Reps: </label>
-                    <input id="reps" name="reps" type="number">
+                    <input id="reps" name="reps" type="number" min="1">
 
                     <input id="exercise-id" name="eid" type="text" hidden>
 
-                    <button id="add-exercise-to-workout" type="button">Add Exercise</button>
+                    <button id="add-exercise-to-workout" type="reset">Add Exercise</button>
+                    <p id="notification" class="notification">Notification</p>
                 </form>
             </div>
 
@@ -223,20 +237,27 @@
         </main>
         <script>
             let exerciseContainer = document.getElementById("exercise-container");
+
             const exercisePanel = document.getElementById("exercise-panel");
-            const newWorkoutPanel = document.getElementById("new-workout-panel");
-            const workoutPanel = document.getElementById("workout-panel");
             const addExerciseBtn = document.getElementById("add-exercise");
             const editExerciseBtn = document.getElementById("edit-exercise");
-            const exerciseFilter = document.getElementById("filter");
-            const addExerciseToWorkoutBtn = document.getElementById("add-exercise-to-workout");
+
+            const newWorkoutPanel = document.getElementById("new-workout-panel");
             const addWorkoutBtn = document.getElementById("add-workout");
+
+            const workoutPanel = document.getElementById("workout-panel");
+            const addExerciseToWorkoutBtn = document.getElementById("add-exercise-to-workout");
+            const notification = document.getElementById("notification");
+
+            const exerciseFilter = document.getElementById("filter");
 
             const difficultLevel = { "Beginner": "beginner", "Intermediate": "intermediate", "Advanced": "advanced" };
             
             /************************
                     Server-side     
             ************************/
+            const errorCodes = {"23505": "Exercise already exists!", "22P02": "Missing parameters!"}
+
             async function serverGetExercises(difficulty, target) {
                 try {
                     const response = await fetch(`http://localhost:5000/exercises?difficulty=${difficulty}&target=${target}`, {
@@ -306,6 +327,12 @@
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ wid: workoutId, eid: exerciseId, sets: exerciseSets, weight: exerciseWeight, reps: exerciseReps })
                     });
+                    if (response.status === 500) {
+                        const code = (await response.json()).code; 
+                        return errorCodes[code];
+                    } else {
+                        return await response.json();
+                    }
                 } catch (error) {
                     console.error(error);
                 }
@@ -473,13 +500,20 @@
                 }
             }
 
+            function notifyExerciseAddition(message) {
+                notification.textContent = message;
+                notification.classList.add("show");
+                setTimeout(() => {notification.classList.remove("show");}, 2000);
+            }
+
             async function addExerciseToWorkout() {
                 const wid = workoutPanel.workout.value;
                 const eid = workoutPanel.eid.value;
                 const sets = workoutPanel.sets.value;
                 const weight = workoutPanel.weight.value;
                 const reps = workoutPanel.reps.value;
-                await serverAddExercise(wid, eid, sets, weight, reps);
+                const response = await serverAddExercise(wid, eid, sets, weight, reps);
+                notifyExerciseAddition(response);
             }
 
             async function addWorkout() {

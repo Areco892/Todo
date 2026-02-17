@@ -49,10 +49,10 @@ export async function deleteExercise(req: Request, res: Response) {
 export async function addExercise(req: Request, res: Response) {
     try {
         const { wid, eid, sets, weight, reps } = req.body;
-        const exercise = await ExerciseServices.addExerciseService(wid, eid, sets, weight, reps); 
+        const exercise = await ExerciseServices.addExerciseService(wid, eid, sets, weight, reps);
         res.json(exercise);
     } catch (error) {
         console.error(error);
-        res.send(500).json({ message: "Server error. "});
+        res.status(500).send(error);
     }
 }

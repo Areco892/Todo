@@ -60,5 +60,5 @@ export async function addExercise(wid: string, eid: string, sets: string, weight
         VALUES ($1, $2, $3, $4, $5)`, 
         [wid, eid, sets, weight, reps]
     );
-    return exercise.rows[0];
+    return "Exercise was added successfully!";
 }
