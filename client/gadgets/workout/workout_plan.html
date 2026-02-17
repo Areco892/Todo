@@ -45,6 +45,21 @@
                 align-items: center;
                 gap: 0.5rem;
 
+                input {
+                    font-size: 1.5rem;
+                    text-align: center;
+                }
+
+                input.show {
+                    border: none;
+                    font-size: 1.5rem;
+                    text-align: center;
+                    cursor: default;
+                }
+                input:focus.show {
+                    outline: none;
+                }
+
                 ul {
                     list-style: none;
                     display: flex;
@@ -72,7 +87,6 @@
             .hide{
                 display: none;
             }
-            
 
         </style>
     </head>
@@ -110,7 +124,7 @@
                 const response = await fetch("http://localhost:5000/workoutplans", {
                     method: "GET"
                 });
-                const workouts = response.json();
+                const workouts = await response.json();
                 return workouts;
             }
 
@@ -118,7 +132,7 @@
                 const response = await fetch(`http://localhost:5000/workoutplans/${workoutID}`, {
                     method: "GET"
                 });
-                const workouts = response.json();
+                const workouts = await response.json();
                 return workouts;
             }
 
@@ -128,12 +142,29 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ name: workoutName })
                 });
-                const newWorkout = response.json();
+                const newWorkout = await    response.json();
                 return newWorkout;
+            }
+
+            async function serverUpdateWorkout(workoutId, workoutName) {
+                const response = await fetch(`http://localhost:5000/workoutplans/${workoutId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: workoutName })
+                });
+                const updatedWorkout = await response.json();
+                console.log(updatedWorkout);
+                return updatedWorkout;
             }
 
             async function serverDeleteWorkout(workoutId) {
                 await fetch(`http://localhost:5000/workoutplans/${workoutId}`, {
+                    method: "DELETE"
+                });
+            }
+
+            async function serverDeleteExercise(workoutId, exerciseId) {
+                await fetch(`http://localhost:5000/workoutplans/${workoutId}/${exerciseId}`, {
                     method: "DELETE"
                 });
             }
@@ -147,8 +178,17 @@
                 workoutSection.id = workout.wid;
                 
                 // Workout Name
-                const workoutName = document.createElement("h2");
-                workoutName.textContent = workout.name;
+                const workoutName = document.createElement("input");
+                workoutName.value = workout.name;
+                workoutName.readOnly = true;
+                workoutName.name = "workout-name";
+                workoutName.classList.add("show");
+
+                const editWorkoutNameBtn = document.createElement("button");
+                editWorkoutNameBtn.type = "button";
+                editWorkoutNameBtn.textContent = "Done";
+                editWorkoutNameBtn.classList.add("hide");
+                editWorkoutNameBtn.classList.add('edit-name');
 
                 // Workout Exercises
                 const workoutExercises = document.createElement("ul");
@@ -159,6 +199,7 @@
                 if (exerciseList.length > 0) {
                     exerciseList.forEach(exercise => {
                     const exerciseComponent = document.createElement("li");
+                    exerciseComponent.value = exercise.eid;
                     
                     const exerciseDescription = document.createElement("ul");
                     exerciseDescription.textContent = exercise.name;
@@ -168,10 +209,17 @@
                     exerciseWeight.textContent = exercise.weight + "lbs";
                     const exerciseReps = document.createElement("li");
                     exerciseReps.textContent = exercise.reps + "reps";
-
+                    
+                    const exerciseDeleteBtn = document.createElement("button");
+                    exerciseDeleteBtn.type = "button";
+                    exerciseDeleteBtn.textContent = "X";
+                    exerciseDeleteBtn.classList.add("hide");
+                    exerciseDeleteBtn.classList.add('delete-exercise-btn');
+                    
                     exerciseDescription.appendChild(exerciseSets);
                     exerciseDescription.appendChild(exerciseWeight);
                     exerciseDescription.appendChild(exerciseReps);
+                    exerciseDescription.appendChild(exerciseDeleteBtn);
 
                     exerciseComponent.appendChild(exerciseDescription);
 
@@ -193,12 +241,11 @@
                 startWorkoutBtn.type = "button";
                 startWorkoutBtn.textContent = "Start Workout";
                 
-
-                const editWorkoutBtn = document.createElement("button");
-                editWorkoutBtn.type = "button";
-                editWorkoutBtn.textContent = "Edit Workout";
-                editWorkoutBtn.classList.add('hide');
-                editWorkoutBtn.classList.add('edit-btn');
+                // const editWorkoutBtn = document.createElement("button");
+                // editWorkoutBtn.type = "button";
+                // editWorkoutBtn.textContent = "Edit Workout";
+                // editWorkoutBtn.classList.add('hide');
+                // editWorkoutBtn.classList.add('edit-btn');
 
                 const deleteWorkoutBtn = document.createElement("button");
                 deleteWorkoutBtn.type = "button";
@@ -207,11 +254,12 @@
                 deleteWorkoutBtn.classList.add('delete-btn');
 
                 buttonPanel.appendChild(startWorkoutBtn);
-                buttonPanel.appendChild(editWorkoutBtn);
+                // buttonPanel.appendChild(editWorkoutBtn);
                 buttonPanel.appendChild(deleteWorkoutBtn);
                 
                 // Add all the elements to the workout section
                 workoutSection.appendChild(workoutName);
+                workoutSection.appendChild(editWorkoutNameBtn);
                 workoutSection.appendChild(workoutExercises);
                 workoutSection.appendChild(addExerciseLink);
                 workoutSection.appendChild(buttonPanel);
@@ -222,9 +270,9 @@
         
             async function initialRender() {
                 const workouts = await serverGetWorkouts();
-                workouts.forEach(workout => {
-                    createWorkout(workout);
-                });
+                for (const workout of workouts) {
+                    await createWorkout(workout);
+                }
             }
             initialRender();
 
@@ -236,12 +284,20 @@
             function toggleEditMode() {
                 const workouts = workoutContainer.querySelectorAll("section");
                 workouts.forEach(workout => {
-                    
+                    const workoutName = workout.querySelector("input");
+                    const editWorkoutNameBtn = workout.querySelector(".edit-name");
                     const addExerciseLink = workout.querySelector("a");
                     const deleteWorkoutBtn = workout.querySelector(".delete-btn");
-
+                    const deleteExerciseBtns = workout.querySelectorAll(".delete-exercise-btn");
+                    
+                    workoutName.readOnly = false;
+                    workoutName.classList.toggle("show");
+                    editWorkoutNameBtn.classList.toggle("hide");
                     addExerciseLink.classList.toggle("hide");
                     deleteWorkoutBtn.classList.toggle("hide");
+                    deleteExerciseBtns.forEach(button => {
+                        button.classList.toggle("hide");
+                    }); 
                 });
             }
             
@@ -260,10 +316,32 @@
                 }
             }
 
+            async function deleteExercise(e) {
+                if (e.target && e.target.classList.contains("delete-exercise-btn")) {
+                    const workout = e.target.closest("section");
+                    const li = e.target.closest("li")
+                    const wid = workout.id;
+                    const eid = li.value;
+                    const response = await serverDeleteExercise(wid, eid);
+                    li.remove();
+                }
+            }
+
+            async function editWorkoutName(e) {
+                if (e.target && e.target.classList.contains("edit-name")) {
+                    const section = e.target.closest("section");
+                    const workoutId = section.id;
+                    const newName = section.querySelector("input").value;
+                    await serverUpdateWorkout(workoutId, newName);
+                }
+            }
+
             createBtn.addEventListener("click", toggleCreateMode);
             addWorkoutBtn.addEventListener("click", addWorkout);
             editBtn.addEventListener("click", toggleEditMode);
             workoutContainer.addEventListener("click", deleteWorkout);
+            workoutContainer.addEventListener("click", deleteExercise);
+            workoutContainer.addEventListener("click", editWorkoutName);
         </script>
     </body>
 </html>
