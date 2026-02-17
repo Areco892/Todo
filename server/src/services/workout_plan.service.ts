@@ -12,6 +12,14 @@ export async function createWorkoutService(workoutName: string) {
     return await WorkoutPlanModel.createWorkout(workoutName);
 }
 
+export async function updateWorkoutService(workoutId: string, workoutName: string) {
+    return await WorkoutPlanModel.updateWorkout(workoutId, workoutName);
+}
+
 export async function deleteWorkoutService(workoutId: string) {
     return await WorkoutPlanModel.deleteWorkout(workoutId);
+}
+
+export async function deleteExerciseService(wid: string, eid: string) {
+    return await WorkoutPlanModel.deleteExercise(wid, eid);
 }
