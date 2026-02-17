@@ -65,7 +65,7 @@
                 justify-content: space-evenly;
             }
 
-            #exercise-panel, #workout-panel{
+            #exercise-panel, #new-workout-panel, #workout-panel{
                 width: 300px;
                 display: flex;
                 flex-direction: column;
@@ -161,12 +161,20 @@
                     <button id="add-exercise" type="button">Add Exercise</button>
                     <button id="edit-exercise" type="button">Edit Exercise</button>
                 </form>
+
+                <form id="new-workout-panel">
+                    <h2>New Workout</h2>
+
+                    <label for="workout-name">Workout Name: </label>
+                    <input id="workout-name" name="name" type="text" required>
+                    <button id="add-workout" type="button">Add Workout Plan</button>
+                </form>
             
                 <form id="workout-panel">
                     <h2>Add to Workout</h2>
 
                     <label for="workout">Workout: </label>
-                    <select name="workout">
+                    <select id="workout" name="workout">
                     </select>
 
                     <label for="exercise-name">Exercise Name: </label>
@@ -216,11 +224,13 @@
         <script>
             let exerciseContainer = document.getElementById("exercise-container");
             const exercisePanel = document.getElementById("exercise-panel");
+            const newWorkoutPanel = document.getElementById("new-workout-panel");
             const workoutPanel = document.getElementById("workout-panel");
             const addExerciseBtn = document.getElementById("add-exercise");
             const editExerciseBtn = document.getElementById("edit-exercise");
             const exerciseFilter = document.getElementById("filter");
             const addExerciseToWorkoutBtn = document.getElementById("add-exercise-to-workout");
+            const addWorkoutBtn = document.getElementById("add-workout");
 
             const difficultLevel = { "Beginner": "beginner", "Intermediate": "intermediate", "Advanced": "advanced" };
             
@@ -299,6 +309,16 @@
                 } catch (error) {
                     console.error(error);
                 }
+            }
+
+            async function serverCreateWorkout(workoutName) {
+                const response = await fetch("http://localhost:5000/workoutplans", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: workoutName })
+                });
+                const newWorkout = response.json();
+                return newWorkout;
             }
 
             /************************
@@ -437,7 +457,7 @@
                     exercise.remove();
                 }
             }
-
+            
             async function loadExerciseToWorkout(e) {
                 if (e.target && e.target.classList.contains("add-btn")) {
                     const workouts = await serverGetWorkouts();
@@ -461,6 +481,11 @@
                 const reps = workoutPanel.reps.value;
                 await serverAddExercise(wid, eid, sets, weight, reps);
             }
+
+            async function addWorkout() {
+                const workoutName = newWorkoutPanel.name.value;
+                await serverCreateWorkout(workoutName);
+            }
             
             addExerciseBtn.addEventListener("click", addExercise);
             editExerciseBtn.addEventListener("click", editExercise);
@@ -469,6 +494,7 @@
             exerciseContainer.addEventListener("click", loadExerciseDetails);
             exerciseFilter.addEventListener("change", showExercises);
             addExerciseToWorkoutBtn.addEventListener("click", addExerciseToWorkout);
+            addWorkoutBtn.addEventListener("click", addWorkout);
 
         </script>
     </body>
