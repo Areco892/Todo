@@ -7,7 +7,7 @@ export async function getWorkouts(req: Request, res: Response) {
         res.json(workouts);
     } catch (error) {
         console.error(error);
-        res.send(500).json({ message: "Server error." });
+        res.status(500).json({ message: "Server error." });
     }
 }
 
@@ -18,7 +18,7 @@ export async function getExercises(req: Request, res: Response) {
         res.json(exercises);
     } catch (error) {
         console.error(error);
-        res.send(500).json({ message: "Server error." });
+        res.status(500).json({ message: "Server error." });
     }
 }
 
@@ -29,7 +29,7 @@ export async function createWorkout(req: Request, res: Response) {
         res.json(newWorkout);
     } catch (error) {
         console.error(error);
-        res.send(500).json({ message: "Server error." });
+        res.status(500).json({ message: "Server error." });
     }
 }
 
@@ -41,28 +41,30 @@ export async function updateWorkout(req: Request, res: Response) {
         res.json(updatedWorkout);
     } catch (error) {
         console.error(error);
-        res.send(500).json({ message: "Server error." });
+        res.status(500).json({ message: "Server error." });
     }
 }
 
 export async function deleteWorkout(req: Request, res: Response) {
     try {
         const workoutId = req.params.id as string;
-        const deletedWorkout = await WorkoutPlanServices.deleteWorkoutService(workoutId);
-        res.json({ message: "Workout was deleted!" });
+        const response = await WorkoutPlanServices.deleteWorkoutService(workoutId);
+        const message = await response;
+        res.json({ message: message});
     } catch (error) {
         console.error(error);
-        res.send(500).json({ message: "Server error." });
+        res.status(500).json({ message: "Server error." });
     }
 }
 
 export async function deleteExercise(req: Request, res: Response) {
     try {
         const { wid, eid } = req.params;
-        await WorkoutPlanServices.deleteExerciseService(wid as string, eid as string);
-        res.json({ message: "Exercise was deleted!" });
+        const response = await WorkoutPlanServices.deleteExerciseService(wid as string, eid as string);
+        const message = await response;
+        res.json({ message: message });
     } catch (error) {
         console.error(error);
-        res.send(500).json({ message: "Server error." });
+        res.status(500).json({ message: "Server error." });
     }
 }
