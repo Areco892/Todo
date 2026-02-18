@@ -252,7 +252,7 @@
             const exerciseFilter = document.getElementById("filter");
 
             const difficultLevel = { "Beginner": "beginner", "Intermediate": "intermediate", "Advanced": "advanced" };
-            
+
             /************************
                     Server-side     
             ************************/
@@ -425,6 +425,13 @@
                 exercises.forEach(exercise => {
                     createExercise(exercise);
                 });
+                const params = new URLSearchParams(window.location.search);
+                const workoutId = params.get("wid");
+                if (workoutId) {
+                    await loadWorkout();
+                    const workoutName = workoutPanel.querySelector("#workout")
+                    workoutName.value = workoutId;
+                }
             }
             initialRender();
 
@@ -485,16 +492,19 @@
                 }
             }
             
-            async function loadExerciseToWorkout(e) {
+            async function loadWorkout() {
+                const workouts = await serverGetWorkouts();
+                workoutPanel.querySelector("select").innerHTML = "";
+                workouts.forEach(workout => {
+                    const workoutItem = document.createElement("option");
+                    workoutItem.value = workout.wid;
+                    workoutItem.textContent = workout.name;
+                    workoutPanel.querySelector("select").appendChild(workoutItem);
+                });
+            }
+
+            async function loadExerciseToWorkoutForm(e) {
                 if (e.target && e.target.classList.contains("add-btn")) {
-                    const workouts = await serverGetWorkouts();
-                    workoutPanel.querySelector("select").innerHTML = "";
-                    workouts.forEach(workout => {
-                        const workoutItem = document.createElement("option");
-                        workoutItem.value = workout.wid;
-                        workoutItem.textContent = workout.name;
-                        workoutPanel.querySelector("select").appendChild(workoutItem);
-                    });
                     workoutPanel.querySelector("#exercise-name").value = e.target.closest("section").querySelector("h2").textContent; 
                     workoutPanel.eid.value = e.target.closest("section").id;
                 }
@@ -514,6 +524,7 @@
                 const reps = workoutPanel.reps.value;
                 const response = await serverAddExercise(wid, eid, sets, weight, reps);
                 notifyExerciseAddition(response);
+                workoutPanel.workout.value = wid;
             }
 
             async function addWorkout() {
@@ -523,7 +534,7 @@
             
             addExerciseBtn.addEventListener("click", addExercise);
             editExerciseBtn.addEventListener("click", editExercise);
-            exerciseContainer.addEventListener("click", loadExerciseToWorkout);
+            exerciseContainer.addEventListener("click", loadExerciseToWorkoutForm);
             exerciseContainer.addEventListener("click", deleteExercise);
             exerciseContainer.addEventListener("click", loadExerciseDetails);
             exerciseFilter.addEventListener("change", showExercises);

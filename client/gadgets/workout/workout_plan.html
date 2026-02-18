@@ -71,7 +71,9 @@
                     display: flex;
                     flex-direction: row;
                     justify-content: end;
+                    align-items: end;
                     gap: 1rem;
+                    text-align: end;
                 }
             }
 
@@ -86,6 +88,19 @@
             }
             .hide{
                 display: none;
+            }
+
+            .notification {
+                background-color: rgba(2, 255, 2, 0.708);
+                padding: 0.5rem;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 1s ease-out;
+            }
+
+            .notification.show {
+                opacity: 1;
+                pointer-events: auto;
             }
 
         </style>
@@ -105,6 +120,8 @@
                 <input id="name" name="name" type="text" required>
                 <button id="add-workout" type="button">Add Workout Plan</button>
             </form>
+
+            <p id="notification" class="notification"></p>
             
             <div id="workout-container">
             </div>
@@ -116,6 +133,7 @@
             const createBtn = document.getElementById("create-btn");
             const addWorkoutBtn = document.getElementById("add-workout");
             const editBtn = document.getElementById("edit-mode-btn");
+            const notification = document.getElementById("notification");
 
             /*******************
                 Server-side
@@ -153,20 +171,23 @@
                     body: JSON.stringify({ name: workoutName })
                 });
                 const updatedWorkout = await response.json();
-                console.log(updatedWorkout);
                 return updatedWorkout;
             }
 
             async function serverDeleteWorkout(workoutId) {
-                await fetch(`http://localhost:5000/workoutplans/${workoutId}`, {
+                const response = await fetch(`http://localhost:5000/workoutplans/${workoutId}`, {
                     method: "DELETE"
                 });
+                const message = (await response.json()).message;
+                return message;
             }
 
             async function serverDeleteExercise(workoutId, exerciseId) {
-                await fetch(`http://localhost:5000/workoutplans/${workoutId}/${exerciseId}`, {
+                const response = await fetch(`http://localhost:5000/workoutplans/${workoutId}/${exerciseId}`, {
                     method: "DELETE"
                 });
+                const message = (await response.json()).message;
+                return message;
             }
 
             /*******************
@@ -180,7 +201,7 @@
                 // Workout Name
                 const workoutName = document.createElement("input");
                 workoutName.value = workout.name;
-                workoutName.readOnly = true;
+                workoutName.disabled = true;
                 workoutName.name = "workout-name";
                 workoutName.classList.add("show");
 
@@ -201,8 +222,9 @@
                     const exerciseComponent = document.createElement("li");
                     exerciseComponent.value = exercise.eid;
                     
-                    const exerciseDescription = document.createElement("ul");
-                    exerciseDescription.textContent = exercise.name;
+                    const exerciseItem = document.createElement("ul");
+                    const exerciseName = document.createElement("li");
+                    exerciseName.textContent = exercise.name;
                     const exerciseSets = document.createElement("li");
                     exerciseSets.textContent = exercise.sets + "sets";
                     const exerciseWeight = document.createElement("li");
@@ -216,22 +238,25 @@
                     exerciseDeleteBtn.classList.add("hide");
                     exerciseDeleteBtn.classList.add('delete-exercise-btn');
                     
-                    exerciseDescription.appendChild(exerciseSets);
-                    exerciseDescription.appendChild(exerciseWeight);
-                    exerciseDescription.appendChild(exerciseReps);
-                    exerciseDescription.appendChild(exerciseDeleteBtn);
+                    exerciseItem.appendChild(exerciseName);
+                    exerciseItem.appendChild(exerciseSets);
+                    exerciseItem.appendChild(exerciseWeight);
+                    exerciseItem.appendChild(exerciseReps);
+                    exerciseItem.appendChild(exerciseDeleteBtn);
 
-                    exerciseComponent.appendChild(exerciseDescription);
+                    exerciseComponent.appendChild(exerciseItem);
 
                     workoutExercises.appendChild(exerciseComponent);
                 });
                 }
 
-                // Add exercise link
-                const addExerciseLink = document.createElement("a");
-                addExerciseLink.href = "exercise_selection.html";
-                addExerciseLink.textContent = "+ Add Exercise";
-                addExerciseLink.classList.add('hide');
+                // Add exercise btn
+                const goToExerciseSelectorBtn = document.createElement("button");
+                goToExerciseSelectorBtn.textContent = "+ Add Exercise";
+                goToExerciseSelectorBtn.classList.add('hide');
+                goToExerciseSelectorBtn.setAttribute("data-id", workout.wid);
+                goToExerciseSelectorBtn.classList.add("add-exercise-btn")
+                
 
                 // Button Panel
                 const buttonPanel = document.createElement("div");
@@ -256,7 +281,7 @@
                 workoutSection.appendChild(workoutName);
                 workoutSection.appendChild(editWorkoutNameBtn);
                 workoutSection.appendChild(workoutExercises);
-                workoutSection.appendChild(addExerciseLink);
+                workoutSection.appendChild(goToExerciseSelectorBtn);
                 workoutSection.appendChild(buttonPanel);
 
                 // Add the workout section to the workout container
@@ -271,24 +296,29 @@
             }
             initialRender();
 
+            /***************************
+                Create and Edit Mode
+            ***************************/
             function toggleCreateMode() {
+                editBtn.disabled = !editBtn.disabled;
                 workoutPanel.classList.toggle("hide");
                 workoutPanel.classList.toggle("show");
             }
 
             function toggleEditMode() {
+                createBtn.disabled = !createBtn.disabled;
                 const workouts = workoutContainer.querySelectorAll("section");
                 workouts.forEach(workout => {
                     const workoutName = workout.querySelector("input");
                     const editWorkoutNameBtn = workout.querySelector(".edit-name");
-                    const addExerciseLink = workout.querySelector("a");
+                    const goToExerciseSelectorBtn = workout.querySelector(".add-exercise-btn");
                     const deleteWorkoutBtn = workout.querySelector(".delete-btn");
                     const deleteExerciseBtns = workout.querySelectorAll(".delete-exercise-btn");
                     
-                    workoutName.readOnly = false;
+                    workoutName.disabled = !workoutName.disabled;
                     workoutName.classList.toggle("show");
                     editWorkoutNameBtn.classList.toggle("hide");
-                    addExerciseLink.classList.toggle("hide");
+                    goToExerciseSelectorBtn.classList.toggle("hide");
                     deleteWorkoutBtn.classList.toggle("hide");
                     deleteExerciseBtns.forEach(button => {
                         button.classList.toggle("hide");
@@ -296,29 +326,32 @@
                 });
             }
             
+            /******************************
+                    Notification
+            ******************************/
+            function notify(message) {
+                notification.textContent = message;
+                notification.classList.add("show");
+                setTimeout(() => {notification.classList.remove("show");}, 2000);
+            }
+
+            /******************************
+                    Workout Actions
+            ******************************/
             async function addWorkout() {
                 const workoutName = workoutPanel.name.value;
                 const newWorkout = await serverCreateWorkout(workoutName);
                 createWorkout(newWorkout);
+                notify("Workout Successfully Added!");
             }
 
             async function deleteWorkout(e) {
                 if (e.target && e.target.classList.contains("delete-btn")) {
                     const workout = e.target.closest("section");
                     const workoutId = workout.id;
-                    serverDeleteWorkout(workoutId);
+                    const response = await serverDeleteWorkout(workoutId);
                     workout.remove();
-                }
-            }
-
-            async function deleteExercise(e) {
-                if (e.target && e.target.classList.contains("delete-exercise-btn")) {
-                    const workout = e.target.closest("section");
-                    const li = e.target.closest("li")
-                    const wid = workout.id;
-                    const eid = li.value;
-                    const response = await serverDeleteExercise(wid, eid);
-                    li.remove();
+                    notify(response);
                 }
             }
 
@@ -327,15 +360,42 @@
                     const section = e.target.closest("section");
                     const workoutId = section.id;
                     const newName = section.querySelector("input").value;
-                    await serverUpdateWorkout(workoutId, newName);
+                    const response = await serverUpdateWorkout(workoutId, newName);
+                    notify(response);
+                }
+            }
+            
+            /******************************
+                    Exercise Actions
+            ******************************/
+            async function deleteExercise(e) {
+                if (e.target && e.target.classList.contains("delete-exercise-btn")) {
+                    const workout = e.target.closest("section");
+                    const li = e.target.closest("li")
+                    const wid = workout.id;
+                    const eid = li.value;
+                    const response = await serverDeleteExercise(wid, eid);
+                    li.remove();
+                    notify(response);
                 }
             }
 
+            function goToExerciseSelector(e) {
+                e.preventDefault();
+                if (e.target && e.target.classList.contains("add-exercise-btn")) {
+                    window.location.href = `exercise_selection.html?wid=${e.target.getAttribute("data-id")}`;
+                }
+            }
+
+            /******************************
+                    Start Workout
+            ******************************/
             function startWorkout(e) {
                 if (e.target && e.target.classList.contains("start-btn")) {
                     window.location.href = `workout.html?wid=${e.target.getAttribute("data-id")}`;
                 }
             }
+
             createBtn.addEventListener("click", toggleCreateMode);
             addWorkoutBtn.addEventListener("click", addWorkout);
             editBtn.addEventListener("click", toggleEditMode);
@@ -343,6 +403,7 @@
             workoutContainer.addEventListener("click", deleteExercise);
             workoutContainer.addEventListener("click", editWorkoutName);
             workoutContainer.addEventListener("click", startWorkout);
+            workoutContainer.addEventListener("click", goToExerciseSelector);
         </script>
     </body>
 </html>
