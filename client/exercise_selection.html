@@ -204,7 +204,7 @@
 
                     <input id="exercise-id" name="eid" type="text" hidden>
 
-                    <button id="add-exercise-to-workout" type="reset">Add Exercise</button>
+                    <button id="add-exercise-to-workout" type="button">Add Exercise</button>
                     <p id="notification" class="notification">Notification</p>
                 </form>
             </div>
@@ -427,8 +427,8 @@
                 });
                 const params = new URLSearchParams(window.location.search);
                 const workoutId = params.get("wid");
+                await loadWorkout();
                 if (workoutId) {
-                    await loadWorkout();
                     const workoutName = workoutPanel.querySelector("#workout")
                     workoutName.value = workoutId;
                 }
@@ -524,7 +524,15 @@
                 const reps = workoutPanel.reps.value;
                 const response = await serverAddExercise(wid, eid, sets, weight, reps);
                 notifyExerciseAddition(response);
-                workoutPanel.workout.value = wid;
+                resetAddToWorkoutForm();
+            }
+
+            function resetAddToWorkoutForm() {
+                workoutPanel.name.value = "";
+                workoutPanel.eid.value = "";
+                workoutPanel.sets.value = "";
+                workoutPanel.weight.value = "";
+                workoutPanel.reps.value = "";
             }
 
             async function addWorkout() {

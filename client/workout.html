@@ -206,11 +206,11 @@
     </head>
     <body>
         <header>
-            <h1>Workout</h1>
+            <h1 id="workout-name"></h1>
         </header>
         
         <main>
-            <a href="workout_plan.html">&#8592 See Workout Plans</a>
+            <a href="workout_plan.html">See Workout Plans</a>
             <div id="stopwatch">
                 <p id="timer">00:00:00</p>
                 <div id="button-panel">
@@ -228,8 +228,11 @@
         <script>
             const params = new URLSearchParams(window.location.search);
             const workoutId = params.get("wid");
+            const workoutName = params.get("wname");
             let exerciseContainer = document.getElementById("exercise-container");
             const congratulationBanner = document.getElementById("congratulations");
+            let workoutHeader = document.getElementById("workout-name");
+            workoutHeader.textContent = workoutName;
 
             let completeExercises = 0;
             let totalExercises = 0

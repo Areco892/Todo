@@ -1,5 +1,5 @@
 {
-  "name": "todo",
+  "name": "workout-planner",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,16 +9,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Areco892/Todo.git"
+    "url": "git+https://github.com/Areco892/Workout-Planner.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/Areco892/Todo/issues"
+    "url": "https://github.com/Areco892/Workout-Planner/issues"
   },
-  "homepage": "https://github.com/Areco892/Todo#readme",
+  "homepage": "https://github.com/Areco892/Workout-Planner#readme",
   "dependencies": {
     "bcrypt": "^6.0.0",
     "config": "^4.2.0",
