@@ -1,34 +1,95 @@
-# Todo Site
-## Project Overview
-This Todo Site allows user to create, read, update, and delete tasks. It implements a client-server architecture with a RESTful API for managing todo tasks. The frontend is built with basic HTML, CSS, JavaScript, while the backend is powered by Node.js with Express.js and connected to a PostgreSQL database.
+# Workout Planner Web Application
 
-### Features:
-- Create new todo tasks
-- Read and view all tasks
-- Update task descriptions and completion status
-- Delete tasks
-- Completion status can be toggled using checkboxes
+## Overview
+This project is a full-stack workout planner web application that allows users to create workout plans, add exercises to workouts, and navigate through workouts in an interactive interface. The application is designed to help users organize and follow structured workout routines.
 
-## Usage
-- Open the frontend (index.html) in your browser.
-- Use the form to add a new task to your todo list.
-- Mark tasks as complete/incomplete using the checkboxes.
-- Edit tasks by changing the description.
-- Delete tasks from the list.
+The system consists of a frontend interface for managing workouts and a backend server that handles data storage, workout management, and exercise organization.
 
-## API Documentation
-### Data Format
-- todo_id: Unique identifier of the task.
-- description: Brief description of the task.
-- status: Current status of the task (Pending/Completed).
+## Features
+- Create workout plans
+- Add exercises to existing workout plans
+- View all workout plans
+- Navigate through exercises during a workout
+- Scroll-based workout interface
+- Persistent storage of workouts and exercises
+- Backend API for workout and exercise management
+- CRUD operations for workouts and exercises
 
-### Endpoints
-- GET /todos
-- POST /todos
-- PUT /todos/:id
-- DELETE /todos/:id
+## Tech Stack
 
-## Technologies Used
-- Frontend: HTML, CSS, JavaScript
-- Backend: Node.js, Express.js, JavaScript
-- Database: PostgreSQL
+### Frontend
+
+- HTML
+- CSS
+- JavaScript
+
+### Backend
+
+- Node.js
+- Express
+- PostgreSQL
+
+### The application follows a typical full-stack architecture:
+
+- Frontend sends requests to backend API
+- Backend processes requests and interacts with database
+- Database stores workouts and exercises
+- Backend returns data to frontend
+- Frontend updates UI
+
+## Main Components
+
+- Frontend client
+- Backend REST API
+- Database
+- Workout navigation interface
+- API Endpoints (Example Section)
+
+Method	Endpoint	Description
+GET	/workouts	Get all workout plans
+POST	/workouts	Create a workout plan
+PUT	/workouts/:id	Update a workout
+DELETE	/workouts/:id	Delete a workout
+GET	/exercises	Get all exercises
+POST	/exercises	Add exercise to workout
+
+## Database Schema
+
+### Tables / Collections
+
+- Workouts
+- Exercises
+- WorkoutExercises (if relational)
+
+#### Workout
+- id
+- name
+- dateCreated
+
+Exercise
+- id
+- name
+- sets
+- reps
+- weight
+- workoutId
+
+## Installation and Setup
+
+### Clone repository
+`git clone git@github.com:Areco892/Workout-Planner.git`
+
+### Go into project
+`cd workout-planner`
+
+### Install backend dependencies
+`npm install`
+
+### Start backend server
+`npm start`
+
+### Start frontend
+`npm run dev`
+
+Then open:
+http://localhost:3000
