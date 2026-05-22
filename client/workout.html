@@ -236,12 +236,13 @@
 
             let completeExercises = 0;
             let totalExercises = 0
+            const API_BASE_URL = "https://utpusdepzircoqljljxr.supabase.co/functions/v1/api";
 
             /**************************
                 Server-side Changes
             **************************/
             async function serverGetExercises(workoutID) {
-                const response = await fetch(`http://localhost:5000/workouts/${workoutID}`, {
+                const response = await fetch(`${API_BASE_URL}/workouts/${workoutID}`, {
                     method: "GET"
                 });
                 const exercises = await response.json();
