@@ -10,7 +10,8 @@ CREATE TABLE exercise(
 CREATE TABLE workout(
     wid SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    duration INTEGER
+    duration INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
 );
 
 CREATE TABLE workout_exercise(
